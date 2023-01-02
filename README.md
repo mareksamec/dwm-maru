@@ -10,6 +10,8 @@ https://github.com/bakkeby/dwm-flexipatch/tree/dwm-flexipatch-1.0
 Original DWM (Dynamic Widnow Manager):
 https://dwm.suckless.org
 
+Currently based on DWM 6.2 version
+
 Following patches are enabled:
 ------------------------------
 
@@ -35,7 +37,7 @@ Enable patches in flexipatch by modifying 0 to 1 in patches.h file
 
 Other added custom settings
 ---------------------------
-Added support for laptop HW buttons (see the top of the config.h file).
+Added support for laptop HW buttons (see the top of the config.h file). I have the MODKEY mapped to Super (Win key).
 
 ## Custom keyboard shortcuts
 |     Shortcuts     |                                       Command/app                                       |

@@ -1,28 +1,26 @@
 int
-width_fancybar(Bar *bar, BarWidthArg *a)
+width_fancybar(Bar *bar, BarArg *a)
 {
-	return a->max_width;
+	return a->w;
 }
 
 int
-draw_fancybar(Bar *bar, BarDrawArg *a)
+draw_fancybar(Bar *bar, BarArg *a)
 {
 	int ftw, mw, ew = 0, n = 0;
 	unsigned int i;
 	Client *c;
 	Monitor *m = bar->mon;
 
-	int boxs = drw->fonts->h / 9;
-	int boxw = drw->fonts->h / 6 + 2;
-	#if BAR_TITLE_LEFT_PAD && BAR_TITLE_RIGHT_PAD
+	#if BAR_TITLE_LEFT_PAD_PATCH && BAR_TITLE_RIGHT_PAD_PATCH
 	int x = a->x + lrpad / 2, w = a->w - lrpad;
-	#elif BAR_TITLE_LEFT_PAD
+	#elif BAR_TITLE_LEFT_PAD_PATCH
 	int x = a->x + lrpad / 2, w = a->w - lrpad / 2;
-	#elif BAR_TITLE_RIGHT_PAD
+	#elif BAR_TITLE_RIGHT_PAD_PATCH
 	int x = a->x, w = a->w - lrpad / 2;
 	#else
 	int x = a->x, w = a->w;
-	#endif // BAR_TITLE_LEFT_PAD | BAR_TITLE_RIGHT_PAD
+	#endif // BAR_TITLE_LEFT_PAD_PATCH | BAR_TITLE_RIGHT_PAD_PATCH
 
 	for (c = m->clients; c; c = c->next) {
 		if (ISVISIBLE(c))
@@ -52,31 +50,19 @@ draw_fancybar(Bar *bar, BarDrawArg *a)
 			if (!ISVISIBLE(c))
 				continue;
 			ftw = MIN(m->sel == c ? w : mw, TEXTW(c->name));
-
-			#if BAR_VTCOLORS_PATCH
 			drw_setscheme(drw, scheme[m->sel == c ? SchemeTitleSel : SchemeTitleNorm]);
-			#elif BAR_TITLECOLOR_PATCH
-			drw_setscheme(drw, scheme[m->sel == c ? SchemeTitle : SchemeNorm]);
-			#else
-			drw_setscheme(drw, scheme[m->sel == c ? SchemeSel : SchemeNorm]);
-			#endif // BAR_VTCOLORS_PATCH / BAR_TITLECOLOR_PATCH
 			if (ftw > 0) /* trap special handling of 0 in drw_text */
-				#if BAR_PANGO_PATCH
-				drw_text(drw, x, 0, ftw, bh, lrpad / 2, c->name, 0, False);
-				#else
-				drw_text(drw, x, 0, ftw, bh, lrpad / 2, c->name, 0);
-				#endif // BAR_PANGO_PATCH
-			if (c->isfloating)
-				drw_rect(drw, x + boxs, boxs, boxw, boxw, c->isfixed, 0);
+				drw_text(drw, x, a->y, ftw, a->h, lrpad / 2, c->name, 0, False);
+			drawstateindicator(c->mon, c, 1, x, a->y, ftw, a->h, 0, 0, c->isfixed);
 			x += ftw;
 			w -= ftw;
 		}
 	}
-	return x + w;
+	return n;
 }
 
 int
-click_fancybar(Bar *bar, Arg *arg, BarClickArg *a)
+click_fancybar(Bar *bar, Arg *arg, BarArg *a)
 {
 	return ClkWinTitle;
 }

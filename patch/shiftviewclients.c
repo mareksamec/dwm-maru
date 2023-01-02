@@ -16,16 +16,26 @@ shiftviewclients(const Arg *arg)
 		tagmask = tagmask | c->tags;
 		#endif // SCRATCHPADS_PATCH
 
+	#if SCRATCHPADS_PATCH
+	shifted.ui = selmon->tagset[selmon->seltags] & ~SPTAGMASK;
+	#else
 	shifted.ui = selmon->tagset[selmon->seltags];
+	#endif // SCRATCHPADS_PATCH
 	if (arg->i > 0) // left circular shift
 		do {
 			shifted.ui = (shifted.ui << arg->i)
-			   | (shifted.ui >> (LENGTH(tags) - arg->i));
+			   | (shifted.ui >> (NUMTAGS - arg->i));
+			#if SCRATCHPADS_PATCH
+			shifted.ui &= ~SPTAGMASK;
+			#endif // SCRATCHPADS_PATCH
 		} while (tagmask && !(shifted.ui & tagmask));
 	else // right circular shift
 		do {
 			shifted.ui = (shifted.ui >> (- arg->i)
-			   | shifted.ui << (LENGTH(tags) + arg->i));
+			   | shifted.ui << (NUMTAGS + arg->i));
+			#if SCRATCHPADS_PATCH
+			shifted.ui &= ~SPTAGMASK;
+			#endif // SCRATCHPADS_PATCH
 		} while (tagmask && !(shifted.ui & tagmask));
 
 	view(&shifted);

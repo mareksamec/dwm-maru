@@ -2,9 +2,9 @@ static void flextile(Monitor *m);
 static void getfactsforrange(Monitor *m, int an, int ai, int size, int *rest, float *fact);
 static void mirrorlayout(const Arg *arg);
 static void rotatelayoutaxis(const Arg *arg);
-#if DWMC_PATCH
+#if IPC_PATCH || DWMC_PATCH
 static void setlayoutaxisex(const Arg *arg);
-#endif // DWMC_PATCH
+#endif // IPC_PATCH | DWMC_PATCH
 static void incnstack(const Arg *arg);
 
 /* Symbol handlers */
@@ -40,6 +40,7 @@ static void arrange_gridmode(Monitor *m, int ax, int ay, int ah, int aw, int ih,
 static void arrange_horizgrid(Monitor *m, int ax, int ay, int ah, int aw, int ih, int iv, int n, int an, int ai);
 static void arrange_dwindle(Monitor *m, int ax, int ay, int ah, int aw, int ih, int iv, int n, int an, int ai);
 static void arrange_spiral(Monitor *m, int ax, int ay, int ah, int aw, int ih, int iv, int n, int an, int ai);
+static void arrange_tatami(Monitor *m, int ax, int ay, int ah, int aw, int ih, int iv, int n, int an, int ai);
 
 /* Named flextile constants */
 enum {
@@ -100,6 +101,7 @@ enum {
 	HORIZGRID,         // clients are arranged in a horizontal grid
 	DWINDLE,           // clients are arranged in fibonacci dwindle mode
 	SPIRAL,            // clients are arranged in fibonacci spiral mode
+	TATAMI,            // clients are arranged as tatami mats
 	AXIS_LAST,
 };
 
@@ -114,4 +116,5 @@ static char tilesymb[] = {
 	126, // "~",
 	92,  // "\\",
 	64,  // "@",
+	84,  // "T",
 };

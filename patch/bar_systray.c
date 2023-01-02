@@ -2,7 +2,7 @@ static Systray *systray = NULL;
 static unsigned long systrayorientation = _NET_SYSTEM_TRAY_ORIENTATION_HORZ;
 
 int
-width_systray(Bar *bar, BarWidthArg *a)
+width_systray(Bar *bar, BarArg *a)
 {
 	unsigned int w = 0;
 	Client *i;
@@ -14,12 +14,13 @@ width_systray(Bar *bar, BarWidthArg *a)
 }
 
 int
-draw_systray(Bar *bar, BarDrawArg *a)
+draw_systray(Bar *bar, BarArg *a)
 {
 	if (!showsystray)
-		return a->x;
+		return 0;
 
 	XSetWindowAttributes wa;
+	XWindowChanges wc;
 	Client *i;
 	unsigned int w;
 
@@ -31,15 +32,16 @@ draw_systray(Bar *bar, BarDrawArg *a)
 		wa.override_redirect = True;
 		wa.event_mask = ButtonPressMask|ExposureMask;
 		wa.border_pixel = 0;
+		systray->h = MIN(a->h, drw->fonts->h);
 		#if BAR_ALPHA_PATCH
 		wa.background_pixel = 0;
 		wa.colormap = cmap;
-		systray->win = XCreateWindow(dpy, root, bar->bx + a->x + lrpad / 2, bar->by, MAX(a->w + 40, 1), bar->bh, 0, depth,
+		systray->win = XCreateWindow(dpy, root, bar->bx + a->x + lrpad / 2, bar->by + a->y + (a->h - systray->h) / 2, MAX(a->w + 40, 1), systray->h, 0, depth,
 						InputOutput, visual,
 						CWOverrideRedirect|CWBorderPixel|CWBackPixel|CWColormap|CWEventMask, &wa); // CWBackPixmap
 		#else
 		wa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
-		systray->win = XCreateSimpleWindow(dpy, root, bar->bx + a->x + lrpad / 2, bar->by, MIN(a->w, 1), bar->bh, 0, 0, scheme[SchemeNorm][ColBg].pixel);
+		systray->win = XCreateSimpleWindow(dpy, root, bar->bx + a->x + lrpad / 2, bar->by + a->y + (a->h - systray->h) / 2, MIN(a->w, 1), systray->h, 0, 0, scheme[SchemeNorm][ColBg].pixel);
 		XChangeWindowAttributes(dpy, systray->win, CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWEventMask, &wa);
 		#endif // BAR_ALPHA_PATCH
 
@@ -61,11 +63,15 @@ draw_systray(Bar *bar, BarDrawArg *a)
 			fprintf(stderr, "dwm: unable to obtain system tray.\n");
 			free(systray);
 			systray = NULL;
-			return a->x;
+			return 0;
 		}
 	}
 
 	systray->bar = bar;
+
+	wc.stack_mode = Above;
+	wc.sibling = bar->win;
+	XConfigureWindow(dpy, systray->win, CWSibling|CWStackMode, &wc);
 
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	for (w = 0, i = systray->icons; i; i = i->next) {
@@ -85,12 +91,12 @@ draw_systray(Bar *bar, BarDrawArg *a)
 			i->mon = bar->mon;
 	}
 
-	XMoveResizeWindow(dpy, systray->win, bar->bx + a->x + lrpad / 2, (w ? bar->by : -bar->by), MAX(w, 1), bar->bh);
-	return a->x + a->w;
+	XMoveResizeWindow(dpy, systray->win, bar->bx + a->x + lrpad / 2, (w ? bar->by + a->y + (a->h - systray->h) / 2: -bar->by - a->y), MAX(w, 1), systray->h);
+	return w;
 }
 
 int
-click_systray(Bar *bar, Arg *arg, BarClickArg *a)
+click_systray(Bar *bar, Arg *arg, BarArg *a)
 {
 	return -1;
 }
@@ -124,25 +130,29 @@ resizerequest(XEvent *e)
 void
 updatesystrayicongeom(Client *i, int w, int h)
 {
+	if (!systray)
+		return;
+
+	int icon_height = systray->h;
 	if (i) {
-		i->h = bh;
+		i->h = icon_height;
 		if (w == h)
-			i->w = bh;
-		else if (h == bh)
+			i->w = icon_height;
+		else if (h == icon_height)
 			i->w = w;
 		else
-			i->w = (int) ((float)bh * ((float)w / (float)h));
+			i->w = (int) ((float)icon_height * ((float)w / (float)h));
 		applysizehints(i, &(i->x), &(i->y), &(i->w), &(i->h), False);
 		/* force icons into the systray dimensions if they don't want to */
-		if (i->h > bh) {
+		if (i->h > icon_height) {
 			if (i->w == i->h)
-				i->w = bh;
+				i->w = icon_height;
 			else
-				i->w = (int) ((float)bh * ((float)i->w / (float)i->h));
-			i->h = bh;
+				i->w = (int) ((float)icon_height * ((float)i->w / (float)i->h));
+			i->h = icon_height;
 		}
-		if (i->w > 2*bh)
-			i->w = bh;
+		if (i->w > 2 * icon_height)
+			i->w = icon_height;
 	}
 }
 
@@ -152,7 +162,7 @@ updatesystrayiconstate(Client *i, XPropertyEvent *ev)
 	long flags;
 	int code = 0;
 
-	if (!showsystray || !i || ev->atom != xatom[XembedInfo] ||
+	if (!showsystray || !systray || !i || ev->atom != xatom[XembedInfo] ||
 			!(flags = getatomprop(i, xatom[XembedInfo])))
 		return;
 

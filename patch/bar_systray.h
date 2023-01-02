@@ -23,12 +23,13 @@ struct Systray {
 	Window win;
 	Client *icons;
 	Bar *bar;
+	int h;
 };
 
 /* bar integration */
-static int width_systray(Bar *bar, BarWidthArg *a);
-static int draw_systray(Bar *bar, BarDrawArg *a);
-static int click_systray(Bar *bar, Arg *arg, BarClickArg *a);
+static int width_systray(Bar *bar, BarArg *a);
+static int draw_systray(Bar *bar, BarArg *a);
+static int click_systray(Bar *bar, Arg *arg, BarArg *a);
 
 /* function declarations */
 static Atom getatomprop(Client *c, Atom prop);

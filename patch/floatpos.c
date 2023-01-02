@@ -29,6 +29,7 @@ setfloatpos(Client *c, const char *floatpos)
 		return;
 	if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
 		return;
+
 	switch(sscanf(floatpos, "%d%c %d%c %d%c %d%c", &x, &xCh, &y, &yCh, &w, &wCh, &h, &hCh)) {
 		case 4:
 			if (xCh == 'w' || xCh == 'W') {
@@ -41,12 +42,16 @@ setfloatpos(Client *c, const char *floatpos)
 				h = y; hCh = yCh;
 				x = 0; xCh = 'G';
 				y = 0; yCh = 'G';
+			} else if (xCh == 'm' || xCh == 'M') {
+				getrootptr(&x, &y);
 			} else {
 				w = 0; wCh = 0;
 				h = 0; hCh = 0;
 			}
 			break;
 		case 8:
+			if (xCh == 'm' || xCh == 'M')
+				getrootptr(&x, &y);
 			break;
 		default:
 			return;
@@ -152,8 +157,6 @@ getfloatpos(int pos, char pCh, int size, char sCh, int min_p, int max_s, int cp,
 	case 'W': // normal size, position takes precedence
 		if (pCh == 'S' && cp + size > min_p + max_s)
 			size = min_p + max_s - cp;
-		else if (pCh == 'Z' && size > cp - max_s)
-			size = cp - min_p;
 		else if (size > max_s)
 			size = max_s;
 
@@ -165,7 +168,8 @@ getfloatpos(int pos, char pCh, int size, char sCh, int min_p, int max_s, int cp,
 				cp = min_p;
 			else if (delta)
 				cp = min_p + max_s;
-		}
+		} else if (pCh == 'Z')
+			cp -= size - cs;
 
 		cs = size;
 		break;
@@ -173,6 +177,8 @@ getfloatpos(int pos, char pCh, int size, char sCh, int min_p, int max_s, int cp,
 
 	if (pCh == '%') // client mid-point position in relation to monitor window area size
 		cp = min_p + max_s * MAX(MIN(pos, 100), 0) / 100 - (cs) / 2;
+	if (pCh == 'm' || pCh == 'M')
+		cp = pos - cs / 2;
 
 	if (!abs_p && cp < min_p)
 		cp = min_p;

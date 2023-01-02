@@ -9,7 +9,7 @@
 #include "drw.h"
 #include "util.h"
 
-#if !PANGO_PATCH
+#if !BAR_PANGO_PATCH
 #define UTF_INVALID 0xFFFD
 #define UTF_SIZ     4
 
@@ -17,10 +17,13 @@ static const unsigned char utfbyte[UTF_SIZ + 1] = {0x80,    0, 0xC0, 0xE0, 0xF0}
 static const unsigned char utfmask[UTF_SIZ + 1] = {0xC0, 0x80, 0xE0, 0xF0, 0xF8};
 static const long utfmin[UTF_SIZ + 1] = {       0,    0,  0x80,  0x800,  0x10000};
 static const long utfmax[UTF_SIZ + 1] = {0x10FFFF, 0x7F, 0x7FF, 0xFFFF, 0x10FFFF};
+#endif // BAR_PANGO_PATCH
+
 #if BAR_POWERLINE_TAGS_PATCH || BAR_POWERLINE_STATUS_PATCH
 Clr transcheme[3];
 #endif // BAR_POWERLINE_TAGS_PATCH | BAR_POWERLINE_STATUS_PATCH
 
+#if !BAR_PANGO_PATCH
 static long
 utf8decodebyte(const char c, size_t *i)
 {
@@ -118,11 +121,7 @@ drw_free(Drw *drw)
 {
 	XFreePixmap(drw->dpy, drw->drawable);
 	XFreeGC(drw->dpy, drw->gc);
-	#if BAR_PANGO_PATCH
-	drw_font_free(drw->font);
-	#else
 	drw_fontset_free(drw->fonts);
-	#endif // BAR_PANGO_PATCH
 	free(drw);
 }
 
@@ -247,7 +246,7 @@ drw_font_create(Drw* drw, const char font[])
 
 	fnt = xfont_create(drw, font);
 
-	return (drw->font = fnt);
+	return (drw->fonts = fnt);
 }
 #else
 Fnt*
@@ -269,33 +268,22 @@ drw_fontset_create(Drw* drw, const char *fonts[], size_t fontcount)
 }
 #endif // BAR_PANGO_PATCH
 
-#if BAR_PANGO_PATCH
-void
-drw_font_free(Fnt *font)
-{
-	if (font)
-		xfont_free(font);
-}
-#else
 void
 drw_fontset_free(Fnt *font)
 {
 	if (font) {
+		#if !BAR_PANGO_PATCH
 		drw_fontset_free(font->next);
+		#endif // BAR_PANGO_PATCH
 		xfont_free(font);
 	}
 }
-#endif // BAR_PANGO_PATCH
 
 void
 drw_clr_create(
 	Drw *drw,
 	Clr *dest,
-	#if BAR_VTCOLORS_PATCH
-	const char clrname[]
-	#else
 	const char *clrname
-	#endif // BAR_VTCOLORS_PATCH
 	#if BAR_ALPHA_PATCH
 	, unsigned int alpha
 	#endif // BAR_ALPHA_PATCH
@@ -326,13 +314,7 @@ drw_clr_create(
 Clr *
 drw_scm_create(
 	Drw *drw,
-	#if BAR_VTCOLORS_PATCH
-	char clrnames[][8],
-	#elif XRDB_PATCH
 	char *clrnames[],
-	#else
-	const char *clrnames[],
-	#endif // BAR_VTCOLORS_PATCH / XRDB_PATCH
 	#if BAR_ALPHA_PATCH
 	const unsigned int alphas[],
 	#endif // BAR_ALPHA_PATCH
@@ -354,7 +336,7 @@ drw_scm_create(
 	return ret;
 }
 
-#if !PANGO_PATCH
+#if !BAR_PANGO_PATCH
 void
 drw_setfontset(Drw *drw, Fnt *set)
 {
@@ -404,7 +386,7 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 	size_t i, len;
 	int render = x || y || w || h;
 
-	if (!drw || (render && !drw->scheme) || !text || !drw->font)
+	if (!drw || (render && !drw->scheme) || !text || !drw->fonts)
 		return 0;
 
 	if (!render) {
@@ -426,10 +408,10 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 	len = strlen(text);
 
 	if (len) {
-		drw_font_getexts(drw->font, text, len, &ew, NULL, markup);
+		drw_font_getexts(drw->fonts, text, len, &ew, NULL, markup);
 		/* shorten text if necessary */
 		for (len = MIN(len, sizeof(buf) - 1); len && ew > w; len--)
-			drw_font_getexts(drw->font, text, len, &ew, NULL, markup);
+			drw_font_getexts(drw->fonts, text, len, &ew, NULL, markup);
 
 		if (len) {
 			memcpy(buf, text, len);
@@ -460,7 +442,7 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 }
 #else
 int
-drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert)
+drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert, Bool ignored)
 {
 	char buf[1024];
 	int ty;
@@ -638,23 +620,13 @@ drw_map(Drw *drw, Window win, int x, int y, unsigned int w, unsigned int h)
 	XSync(drw->dpy, False);
 }
 
-#if BAR_PANGO_PATCH
 unsigned int
-drw_font_getwidth(Drw *drw, const char *text, Bool markup)
-{
-	if (!drw || !drw->font || !text)
-		return 0;
-	return drw_text(drw, 0, 0, 0, 0, 0, text, 0, markup);
-}
-#else
-unsigned int
-drw_fontset_getwidth(Drw *drw, const char *text)
+drw_fontset_getwidth(Drw *drw, const char *text, Bool markup)
 {
 	if (!drw || !drw->fonts || !text)
 		return 0;
-	return drw_text(drw, 0, 0, 0, 0, 0, text, 0);
+	return drw_text(drw, 0, 0, 0, 0, 0, text, 0, markup);
 }
-#endif // BAR_PANGO_PATCH
 
 #if BAR_PANGO_PATCH
 void

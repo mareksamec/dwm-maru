@@ -1,13 +1,24 @@
 #include <X11/Xlib-xcb.h>
 #include <xcb/res.h>
+#ifdef __OpenBSD__
+#include <sys/sysctl.h>
+#include <kvm.h>
+#endif /* __OpenBSD__ */
 
+static int scanner;
 static xcb_connection_t *xcon;
 
-void
+int
 swallow(Client *p, Client *c)
 {
-	if (c->noswallow || c->isterminal)
-		return;
+	Client *s;
+
+	if (c->noswallow > 0 || c->isterminal)
+		return 0;
+	if (c->noswallow < 0 && !swallowfloating && c->isfloating)
+		return 0;
+
+	XMapWindow(dpy, c->win);
 
 	detach(c);
 	detachstack(c);
@@ -21,11 +32,21 @@ swallow(Client *p, Client *c)
 	Window w = p->win;
 	p->win = c->win;
 	c->win = w;
+
+	XChangeProperty(dpy, c->win, netatom[NetClientList], XA_WINDOW, 32, PropModeReplace,
+		(unsigned char *) &(p->win), 1);
+
 	updatetitle(p);
+	s = scanner ? c : p;
+	#if BAR_EWMHTAGS_PATCH
+	setfloatinghint(s);
+	#endif // BAR_EWMHTAGS_PATCH
+	XMoveResizeWindow(dpy, p->win, s->x, s->y, s->w, s->h);
 	arrange(p->mon);
-	XMoveResizeWindow(dpy, p->win, p->x, p->y, p->w, p->h);
 	configure(p);
 	updateclientlist();
+
+	return 1;
 }
 
 void
@@ -36,12 +57,20 @@ unswallow(Client *c)
 	free(c->swallowing);
 	c->swallowing = NULL;
 
+	XDeleteProperty(dpy, c->win, netatom[NetClientList]);
+
+	/* unfullscreen the client */
+	setfullscreen(c, 0);
 	updatetitle(c);
 	arrange(c->mon);
 	XMapWindow(dpy, c->win);
 	XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
-	configure(c);
+	#if BAR_EWMHTAGS_PATCH
+	setfloatinghint(c);
+	#endif // BAR_EWMHTAGS_PATCH
 	setclientstate(c, NormalState);
+	focus(NULL);
+	arrange(c->mon);
 }
 
 pid_t
@@ -49,6 +78,7 @@ winpid(Window w)
 {
 	pid_t result = 0;
 
+	#ifdef __linux__
 	xcb_res_client_id_spec_t spec = {0};
 	spec.client = w;
 	spec.mask = XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID;
@@ -74,6 +104,23 @@ winpid(Window w)
 
 	if (result == (pid_t)-1)
 		result = 0;
+
+	#endif /* __linux__ */
+	#ifdef __OpenBSD__
+	Atom type;
+	int format;
+	unsigned long len, bytes;
+	unsigned char *prop;
+	pid_t ret;
+
+	if (XGetWindowProperty(dpy, w, XInternAtom(dpy, "_NET_WM_PID", 1), 0, 1, False, AnyPropertyType, &type, &format, &len, &bytes, &prop) != Success || !prop)
+		return 0;
+
+	ret = *(pid_t*)prop;
+	XFree(prop);
+	result = ret;
+	#endif /* __OpenBSD__ */
+
 	return result;
 }
 
@@ -88,15 +135,24 @@ getparentprocess(pid_t p)
 	snprintf(buf, sizeof(buf) - 1, "/proc/%u/stat", (unsigned)p);
 
 	if (!(f = fopen(buf, "r")))
-		return 0;
+		return (pid_t)0;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-result"
-	fscanf(f, "%*u %*s %*c %u", &v);
-#pragma GCC diagnostic pop
+	if (fscanf(f, "%*u %*s %*c %u", (unsigned *)&v) != 1)
+		v = (pid_t)0;
 	fclose(f);
 #endif /* __linux__ */
+#ifdef __OpenBSD__
+	int n;
+	kvm_t *kd;
+	struct kinfo_proc *kp;
 
+	kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
+	if (!kd)
+		return 0;
+
+	kp = kvm_getprocs(kd, KERN_PROC_PID, p, sizeof(*kp), &n);
+	v = kp->p_ppid;
+#endif /* __OpenBSD__ */
 	return (pid_t)v;
 }
 

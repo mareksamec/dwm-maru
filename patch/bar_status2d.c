@@ -1,62 +1,92 @@
+#if BAR_STATUS2D_XRDB_TERMCOLORS_PATCH
+static char termcol0[]  = "#000000"; /* black   */
+static char termcol1[]  = "#ff0000"; /* red     */
+static char termcol2[]  = "#33ff00"; /* green   */
+static char termcol3[]  = "#ff0099"; /* yellow  */
+static char termcol4[]  = "#0066ff"; /* blue    */
+static char termcol5[]  = "#cc00ff"; /* magenta */
+static char termcol6[]  = "#00ffff"; /* cyan    */
+static char termcol7[]  = "#d0d0d0"; /* white   */
+static char termcol8[]  = "#808080"; /* black   */
+static char termcol9[]  = "#ff0000"; /* red     */
+static char termcol10[] = "#33ff00"; /* green   */
+static char termcol11[] = "#ff0099"; /* yellow  */
+static char termcol12[] = "#0066ff"; /* blue    */
+static char termcol13[] = "#cc00ff"; /* magenta */
+static char termcol14[] = "#00ffff"; /* cyan    */
+static char termcol15[] = "#ffffff"; /* white   */
+static char *termcolor[] = {
+	termcol0, termcol1, termcol2, termcol3, termcol4, termcol5, termcol6, termcol7,
+	termcol8, termcol9, termcol10, termcol11, termcol12, termcol13, termcol14, termcol15,
+};
+#endif // BAR_STATUS2D_XRDB_TERMCOLORS_PATCH
+
 int
-width_status2d(Bar *bar, BarWidthArg *a)
+width_status2d(Bar *bar, BarArg *a)
 {
+	int width;
 	#if BAR_EXTRASTATUS_PATCH || BAR_STATUSCMD_PATCH
-	return status2dtextlength(rawstext) + lrpad;
+	width = status2dtextlength(rawstext);
 	#else
-	return status2dtextlength(stext) + lrpad;
+	width = status2dtextlength(stext);
 	#endif // #if BAR_EXTRASTATUS_PATCH | BAR_STATUSCMD_PATCH
+	return width ? width + lrpad : 0;
 }
 
 #if BAR_EXTRASTATUS_PATCH
 int
-width_status2d_es(Bar *bar, BarWidthArg *a)
+width_status2d_es(Bar *bar, BarArg *a)
 {
-	#if BAR_EXTRASTATUS_PATCH || BAR_STATUSCMD_PATCH
-	return status2dtextlength(rawestext) + lrpad;
+	int width;
+	#if BAR_STATUSCMD_PATCH
+	width = status2dtextlength(rawestext);
 	#else
-	return status2dtextlength(estext) + lrpad;
-	#endif // #if BAR_EXTRASTATUS_PATCH | BAR_STATUSCMD_PATCH
+	width = status2dtextlength(estext);
+	#endif // BAR_STATUSCMD_PATCH
+	return width ? width + lrpad : 0;
 }
 #endif // BAR_EXTRASTATUS_PATCH
 
 int
-draw_status2d(Bar *bar, BarDrawArg *a)
+draw_status2d(Bar *bar, BarArg *a)
 {
 	#if BAR_EXTRASTATUS_PATCH || BAR_STATUSCMD_PATCH
-	return drawstatusbar(a->x, rawstext);
+	return drawstatusbar(a, rawstext);
 	#else
-	return drawstatusbar(a->x, stext);
+	return drawstatusbar(a, stext);
 	#endif // #if BAR_EXTRASTATUS_PATCH | BAR_STATUSCMD_PATCH
 }
 
 #if BAR_EXTRASTATUS_PATCH
 int
-draw_status2d_es(Bar *bar, BarDrawArg *a)
+draw_status2d_es(Bar *bar, BarArg *a)
 {
-	#if BAR_EXTRASTATUS_PATCH || BAR_STATUSCMD_PATCH
-	return drawstatusbar(a->x, rawestext);
+	#if BAR_STATUSCMD_PATCH
+	return drawstatusbar(a, rawestext);
 	#else
-	return drawstatusbar(a->x, estext);
-	#endif // #if BAR_EXTRASTATUS_PATCH | BAR_STATUSCMD_PATCH
+	return drawstatusbar(a, estext);
+	#endif // BAR_STATUSCMD_PATCH
 }
 #endif // BAR_EXTRASTATUS_PATCH
 
 #if !BAR_STATUSCMD_PATCH
 int
-click_status2d(Bar *bar, Arg *arg, BarClickArg *a)
+click_status2d(Bar *bar, Arg *arg, BarArg *a)
 {
 	return ClkStatusText;
 }
 #endif // BAR_STATUSCMD_PATCH
 
 int
-drawstatusbar(int x, char* stext)
+drawstatusbar(BarArg *a, char* stext)
 {
 	int i, w, len;
+	int x = a->x;
+	int y = a->y;
 	short isCode = 0;
 	char *text;
 	char *p;
+	Clr oldbg, oldfg;
 	len = strlen(stext) + 1;
 	if (!(text = (char*) malloc(sizeof(char)*len)))
 		die("malloc");
@@ -79,13 +109,8 @@ drawstatusbar(int x, char* stext)
 			isCode = 1;
 
 			text[i] = '\0';
-			#if BAR_PANGO_PATCH
 			w = TEXTWM(text) - lrpad;
-			drw_text(drw, x, 0, w, bh, 0, text, 0, True);
-			#else
-			w = TEXTW(text) - lrpad;
-			drw_text(drw, x, 0, w, bh, 0, text, 0);
-			#endif // BAR_PANGO_PATCH
+			drw_text(drw, x, y, w, bh, 0, text, 0, True);
 
 			x += w;
 
@@ -123,9 +148,40 @@ drawstatusbar(int x, char* stext)
 					drw_clr_create(drw, &drw->scheme[ColBg], buf);
 					#endif // BAR_ALPHA_PATCH
 					i += 7;
+				#if BAR_STATUS2D_XRDB_TERMCOLORS_PATCH
+				} else if (text[i] == 'C') {
+					int c = atoi(text + ++i) % 16;
+					#if BAR_ALPHA_PATCH && BAR_STATUS2D_NO_ALPHA_PATCH
+					drw_clr_create(drw, &drw->scheme[ColFg], termcolor[c], 0xff);
+					#elif BAR_ALPHA_PATCH
+					drw_clr_create(drw, &drw->scheme[ColFg], termcolor[c], alphas[SchemeNorm][ColBg]);
+					#else
+					drw_clr_create(drw, &drw->scheme[ColFg], termcolor[c]);
+					#endif // BAR_ALPHA_PATCH
+				} else if (text[i] == 'B') {
+					int c = atoi(text + ++i) % 16;
+					#if BAR_ALPHA_PATCH && BAR_STATUS2D_NO_ALPHA_PATCH
+					drw_clr_create(drw, &drw->scheme[ColBg], termcolor[c], 0xff);
+					#elif BAR_ALPHA_PATCH
+					drw_clr_create(drw, &drw->scheme[ColBg], termcolor[c], alphas[SchemeNorm][ColBg]);
+					#else
+					drw_clr_create(drw, &drw->scheme[ColBg], termcolor[c]);
+					#endif // BAR_ALPHA_PATCH
+				#endif // BAR_STATUS2D_XRDB_TERMCOLORS_PATCH
 				} else if (text[i] == 'd') {
 					drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
 					drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+				} else if (text[i] == 'w') {
+					Clr swp;
+					swp = drw->scheme[ColFg];
+					drw->scheme[ColFg] = drw->scheme[ColBg];
+					drw->scheme[ColBg] = swp;
+				} else if (text[i] == 'v') {
+					oldfg = drw->scheme[ColFg];
+					oldbg = drw->scheme[ColBg];
+				} else if (text[i] == 't') {
+					drw->scheme[ColFg] = oldfg;
+					drw->scheme[ColBg] = oldbg;
 				} else if (text[i] == 'r') {
 					int rx = atoi(text + ++i);
 					while (text[++i] != ',');
@@ -140,7 +196,7 @@ drawstatusbar(int x, char* stext)
 					if (rx < 0)
 						rx = 0;
 
-					drw_rect(drw, rx + x, ry, rw, rh, 1, 0);
+					drw_rect(drw, rx + x, y + ry, rw, rh, 1, 0);
 				} else if (text[i] == 'f') {
 					x += atoi(text + ++i);
 				}
@@ -152,19 +208,14 @@ drawstatusbar(int x, char* stext)
 		}
 	}
 	if (!isCode) {
-		#if BAR_PANGO_PATCH
 		w = TEXTWM(text) - lrpad;
-		drw_text(drw, x, 0, w, bh, 0, text, 0, True);
-		#else
-		w = TEXTW(text) - lrpad;
-		drw_text(drw, x, 0, w, bh, 0, text, 0);
-		#endif // BAR_PANGO_PATCH
+		drw_text(drw, x, y, w, bh, 0, text, 0, True);
 		x += w;
 	}
 	free(p);
 
 	drw_setscheme(drw, scheme[SchemeNorm]);
-	return x;
+	return len - 1;
 }
 
 int
@@ -193,11 +244,7 @@ status2dtextlength(char* stext)
 			if (!isCode) {
 				isCode = 1;
 				text[i] = '\0';
-				#if BAR_PANGO_PATCH
 				w += TEXTWM(text) - lrpad;
-				#else
-				w += TEXTW(text) - lrpad;
-				#endif // BAR_PANGO_PATCH
 				text[i] = '^';
 				if (text[++i] == 'f')
 					w += atoi(text + ++i);
@@ -209,11 +256,7 @@ status2dtextlength(char* stext)
 		}
 	}
 	if (!isCode)
-		#if BAR_PANGO_PATCH
 		w += TEXTWM(text) - lrpad;
-		#else
-		w += TEXTW(text) - lrpad;
-		#endif // BAR_PANGO_PATCH
 	free(p);
 	return w;
 }

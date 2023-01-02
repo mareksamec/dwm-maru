@@ -25,8 +25,10 @@ dragmfact(const Arg *arg)
 	ah = m->wh;
 	aw = m->ww;
 
+	if (!n)
+		return;
 	#if FLEXTILE_DELUXE_LAYOUT
-	if (m->lt[m->sellt]->arrange == &flextile) {
+	else if (m->lt[m->sellt]->arrange == &flextile) {
 		int layout = m->ltaxis[LAYOUT];
 		if (layout < 0) {
 			mirror = 1;
@@ -72,7 +74,7 @@ dragmfact(const Arg *arg)
 
 	/* do not allow mfact to be modified under certain conditions */
 	if (!m->lt[m->sellt]->arrange                            // floating layout
-		|| (!n || (!fixed && m->nmaster && n <= m->nmaster)) // no master
+		|| (!fixed && m->nmaster && n <= m->nmaster) // no master
 		#if MONOCLE_LAYOUT
 		|| m->lt[m->sellt]->arrange == &monocle
 		#endif // MONOCLE_LAYOUT
@@ -150,6 +152,11 @@ dragmfact(const Arg *arg)
 	if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,
 		None, cursor[horizontal ? CurResizeVertArrow : CurResizeHorzArrow]->cursor, CurrentTime) != GrabSuccess)
 		return;
+
+	#if WARP_PATCH
+	ignore_warp = 1;
+	#endif // WARP_PATCH
+
 	XWarpPointer(dpy, None, root, 0, 0, 0, 0, px, py);
 
 	do {
@@ -214,6 +221,10 @@ dragmfact(const Arg *arg)
 			break;
 		}
 	} while (ev.type != ButtonRelease);
+
+	#if WARP_PATCH
+	ignore_warp = 0;
+	#endif // WARP_PATCH
 
 	XUngrabPointer(dpy, CurrentTime);
 	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));

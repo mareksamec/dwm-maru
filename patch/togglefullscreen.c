@@ -1,17 +1,17 @@
 void
 togglefullscreen(const Arg *arg)
 {
-    if (!selmon->sel)
-        return;
+	Client *c = selmon->sel;
+	if (!c)
+		return;
 
-    #if !FAKEFULLSCREEN_PATCH && FAKEFULLSCREEN_CLIENT_PATCH
-    if (selmon->sel->fakefullscreen) {
-    	selmon->sel->fakefullscreen = 0;
-    	if (selmon->sel->isfullscreen) {
-    		selmon->sel->isfullscreen = 0;
-    	}
-    }
-    #endif // FAKEFULLSCREEN_CLIENT_PATCH
-
-    setfullscreen(selmon->sel, !selmon->sel->isfullscreen);
+	#if FAKEFULLSCREEN_CLIENT_PATCH
+	if (c->fakefullscreen == 1) { // fake fullscreen --> fullscreen
+		c->fakefullscreen = 2;
+		setfullscreen(c, 1);
+	} else
+		setfullscreen(c, !c->isfullscreen);
+	#else
+	setfullscreen(c, !c->isfullscreen);
+	#endif // FAKEFULLSCREEN_CLIENT_PATCH
 }

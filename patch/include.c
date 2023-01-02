@@ -1,9 +1,15 @@
 /* Bar functionality */
+#include "bar_indicators.c"
+#include "bar_tagicons.c"
+
 #if BAR_ALPHA_PATCH
 #include "bar_alpha.c"
 #endif
 #if BAR_ALTERNATIVE_TAGS_PATCH
 #include "bar_alternativetags.c"
+#endif
+#if BAR_ANYBAR_PATCH
+#include "bar_anybar.c"
 #endif
 #if BAR_DWMBLOCKS_PATCH && BAR_STATUSCMD_PATCH
 #include "bar_dwmblocks.c"
@@ -41,6 +47,9 @@
 #if BAR_STATUSCOLORS_PATCH
 #include "bar_statuscolors.c"
 #endif
+#if BAR_TABGROUPS_PATCH
+#include "bar_tabgroups.c"
+#endif
 #if BAR_TAGS_PATCH
 #include "bar_tags.c"
 #endif
@@ -53,6 +62,15 @@
 #if BAR_FANCYBAR_PATCH
 #include "bar_fancybar.c"
 #endif
+#if BAR_FLEXWINTITLE_PATCH
+#include "bar_flexwintitle.c"
+#if BAR_WINTITLE_FLOATING_PATCH
+#include "bar_wintitle_floating.c"
+#endif
+#if BAR_WINTITLE_HIDDEN_PATCH
+#include "bar_wintitle_hidden.c"
+#endif
+#endif // BAR_FLEXWINTITLE_PATCH
 #if BAR_AWESOMEBAR_PATCH
 #include "bar_awesomebar.c"
 #endif
@@ -62,8 +80,17 @@
 #if BAR_VTCOLORS_PATCH
 #include "bar_vtcolors.c"
 #endif
+#if BAR_WINTITLEACTIONS_PATCH
+#include "bar_wintitleactions.c"
+#endif
+#if BAR_LAYOUTMENU_PATCH
+#include "bar_layoutmenu.c"
+#endif
 
 /* Other patches */
+#if ASPECTRESIZE_PATCH
+#include "aspectresize.c"
+#endif
 #if ATTACHABOVE_PATCH || ATTACHASIDE_PATCH || ATTACHBELOW_PATCH || ATTACHBOTTOM_PATCH
 #include "attachx.c"
 #endif
@@ -76,8 +103,14 @@
 #if CMDCUSTOMIZE_PATCH
 #include "cmdcustomize.c"
 #endif
+#if COOL_AUTOSTART_PATCH
+#include "cool_autostart.c"
+#endif
 #if CYCLELAYOUTS_PATCH
 #include "cyclelayouts.c"
+#endif
+#if DECORATION_HINTS_PATCH
+#include "decorationhints.c"
 #endif
 #if DRAGCFACT_PATCH && CFACTS_PATCH
 #include "dragcfact.c"
@@ -99,6 +132,12 @@
 #if FOCUSADJACENTTAG_PATCH
 #include "focusadjacenttag.c"
 #endif
+#if FOCUSDIR_PATCH
+#include "focusdir.c"
+#endif
+#if FOCUSMASTER_PATCH
+#include "focusmaster.c"
+#endif
 #if FOCUSURGENT_PATCH
 #include "focusurgent.c"
 #endif
@@ -107,6 +146,18 @@
 #endif
 #if INPLACEROTATE_PATCH
 #include "inplacerotate.c"
+#endif
+#if IPC_PATCH
+#include "ipc.c"
+#ifdef VERSION
+#include "ipc/IPCClient.c"
+#include "ipc/yajl_dumps.c"
+#include "ipc/ipc.c"
+#include "ipc/util.c"
+#endif
+#endif // IPC_PATCH
+#if INSETS_PATCH
+#include "insets.c"
 #endif
 #if KEYMODES_PATCH
 #include "keymodes.c"
@@ -117,8 +168,8 @@
 #if MAXIMIZE_PATCH
 #include "maximize.c"
 #endif
-#if MDPCONTROL_PATCH
-#include "mdpcontrol.c"
+#if MPDCONTROL_PATCH
+#include "mpdcontrol.c"
 #endif
 #if MOVEPLACE_PATCH
 #include "moveplace.c"
@@ -129,8 +180,14 @@
 #if MOVESTACK_PATCH
 #include "movestack.c"
 #endif
+#if NO_MOD_BUTTONS_PATCH
+#include "nomodbuttons.c"
+#endif
 #if PERTAG_PATCH
 #include "pertag.c"
+#endif
+#if PLACEMOUSE_PATCH
+#include "placemouse.c"
 #endif
 #if PUSH_NO_MASTER_PATCH
 #include "push_no_master.c"
@@ -142,6 +199,9 @@
 #endif
 #if RESTARTSIG_PATCH
 #include "restartsig.c"
+#endif
+#if RIODRAW_PATCH
+#include "riodraw.c"
 #endif
 #if ROTATESTACK_PATCH
 #include "rotatestack.c"
@@ -192,6 +252,9 @@
 #endif
 #if SWITCHCOL_PATCH
 #include "switchcol.c"
+#endif
+#if TAB_PATCH
+#include "tab.c"
 #endif
 #if TAGALL_PATCH
 #include "tagall.c"

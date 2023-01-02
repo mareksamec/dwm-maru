@@ -1,23 +1,23 @@
 int
-width_awesomebar(Bar *bar, BarWidthArg *a)
+width_awesomebar(Bar *bar, BarArg *a)
 {
-	return a->max_width;
+	return a->w;
 }
 
 int
-draw_awesomebar(Bar *bar, BarDrawArg *a)
+draw_awesomebar(Bar *bar, BarArg *a)
 {
-	int n = 0, scm, remainder = 0, tabw;
+	int n = 0, scm, remainder = 0, tabw, pad;
 	unsigned int i;
-	#if BAR_TITLE_LEFT_PAD && BAR_TITLE_RIGHT_PAD
+	#if BAR_TITLE_LEFT_PAD_PATCH && BAR_TITLE_RIGHT_PAD_PATCH
 	int x = a->x + lrpad / 2, w = a->w - lrpad;
-	#elif BAR_TITLE_LEFT_PAD
+	#elif BAR_TITLE_LEFT_PAD_PATCH
 	int x = a->x + lrpad / 2, w = a->w - lrpad / 2;
-	#elif BAR_TITLE_RIGHT_PAD
+	#elif BAR_TITLE_RIGHT_PAD_PATCH
 	int x = a->x, w = a->w - lrpad / 2;
 	#else
 	int x = a->x, w = a->w;
-	#endif // BAR_TITLE_LEFT_PAD | BAR_TITLE_RIGHT_PAD
+	#endif // BAR_TITLE_LEFT_PAD_PATCH | BAR_TITLE_RIGHT_PAD_PATCH
 
 	Client *c;
 	for (c = bar->mon->clients; c; c = c->next)
@@ -31,37 +31,29 @@ draw_awesomebar(Bar *bar, BarDrawArg *a)
 			if (!ISVISIBLE(c))
 				continue;
 			if (bar->mon->sel == c)
-				#if BAR_VTCOLORS_PATCH
 				scm = SchemeTitleSel;
-				#elif BAR_TITLECOLOR_PATCH
-				scm = SchemeTitle;
-				#else
-				scm = SchemeSel;
-				#endif // BAR_VTCOLORS_PATCH / BAR_TITLECOLOR_PATCH
 			else if (HIDDEN(c))
 				scm = SchemeHid;
 			else
-				#if BAR_VTCOLORS_PATCH
 				scm = SchemeTitleNorm;
-				#else
-				scm = SchemeNorm;
-				#endif // BAR_VTCOLORS_PATCH
+
+			pad = lrpad / 2;
+			#if BAR_CENTEREDWINDOWNAME_PATCH
+			if (TEXTW(c->name) < tabw)
+				pad = (tabw - TEXTW(c->name) + lrpad) / 2;
+			#endif // BAR_CENTEREDWINDOWNAME_PATCH
 
 			drw_setscheme(drw, scheme[scm]);
-			tabw += (i < remainder ? 1 : 0);
-			#if BAR_PANGO_PATCH
-			drw_text(drw, x, 0, tabw, bh, lrpad / 2, c->name, 0, False);
-			#else
-			drw_text(drw, x, 0, tabw, bh, lrpad / 2, c->name, 0);
-			#endif // BAR_PANGO_PATCH
-			x += tabw;
+			drw_text(drw, x, a->y, tabw + (i < remainder ? 1 : 0), a->h, pad, c->name, 0, False);
+			drawstateindicator(c->mon, c, 1, x, a->y, tabw + (i < remainder ? 1 : 0), a->h, 0, 0, c->isfixed);
+			x += tabw + (i < remainder ? 1 : 0);
 		}
 	}
-	return a->x + a->w;
+	return n;
 }
 
 int
-click_awesomebar(Bar *bar, Arg *arg, BarClickArg *a)
+click_awesomebar(Bar *bar, Arg *arg, BarArg *a)
 {
 	int x = 0, n = 0;
 	Client *c;
@@ -76,92 +68,12 @@ click_awesomebar(Bar *bar, Arg *arg, BarClickArg *a)
 		if (!c || !ISVISIBLE(c))
 			continue;
 		else
-			x += (1.0 / (double)n) * a->rel_w;
-	} while (c && a->rel_x > x && (c = c->next));
+			x += (1.0 / (double)n) * a->w;
+	} while (c && a->x > x && (c = c->next));
 
 	if (c) {
 		arg->v = c;
 		return ClkWinTitle;
 	}
 	return -1;
-}
-
-void
-hide(Client *c) {
-
-	Client *n;
-	if (!c || HIDDEN(c))
-		return;
-
-	Window w = c->win;
-	static XWindowAttributes ra, ca;
-
-	// more or less taken directly from blackbox's hide() function
-	XGrabServer(dpy);
-	XGetWindowAttributes(dpy, root, &ra);
-	XGetWindowAttributes(dpy, w, &ca);
-	// prevent UnmapNotify events
-	XSelectInput(dpy, root, ra.your_event_mask & ~SubstructureNotifyMask);
-	XSelectInput(dpy, w, ca.your_event_mask & ~StructureNotifyMask);
-	XUnmapWindow(dpy, w);
-	setclientstate(c, IconicState);
-	XSelectInput(dpy, root, ra.your_event_mask);
-	XSelectInput(dpy, w, ca.your_event_mask);
-	XUngrabServer(dpy);
-
-	if (c->isfloating || !c->mon->lt[c->mon->sellt]->arrange) {
-		for (n = c->snext; n && (!ISVISIBLE(n) || HIDDEN(n)); n = n->snext);
-		if (!n)
-			for (n = c->mon->stack; n && (!ISVISIBLE(n) || HIDDEN(n)); n = n->snext);
-	} else {
-		n = nexttiled(c);
-		if (!n)
-			n = nexttiled(c->mon->clients);
-	}
-	focus(n);
-	arrange(c->mon);
-}
-
-void
-show(Client *c)
-{
-	if (!c || !HIDDEN(c))
-		return;
-
-	XMapWindow(dpy, c->win);
-	setclientstate(c, NormalState);
-	arrange(c->mon);
-}
-
-void
-togglewin(const Arg *arg)
-{
-	Client *c = (Client*)arg->v;
-	if (!c)
-		return;
-	if (c == selmon->sel)
-		hide(c);
-	else {
-		if (HIDDEN(c))
-			show(c);
-		focus(c);
-		restack(selmon);
-	}
-}
-
-void
-showhideclient(const Arg *arg)
-{
-	Client *c = (Client*)arg->v;
-	if (!c)
-		c = selmon->sel;
-	if (!c)
-		return;
-
-	if (HIDDEN(c)) {
-		show(c);
-		restack(selmon);
-	} else {
-		hide(c);
-	}
 }

@@ -8,6 +8,12 @@ static const int corner_radius           = 10;
 static const unsigned int borderpx       = 1;   /* border pixel of windows */
 #endif // ROUNDED_CORNERS_PATCH
 static const unsigned int snap           = 32;  /* snap pixel */
+#if SWALLOW_PATCH
+static const int swallowfloating         = 0;   /* 1 means swallow floating windows by default */
+#endif // SWALLOW_PATCH
+#if NO_MOD_BUTTONS_PATCH
+static int nomodbuttons                  = 1;   /* allow client mouse button bindings that have no modifier */
+#endif // NO_MOD_BUTTONS_PATCH
 #if VANITYGAPS_PATCH
 static const unsigned int gappih         = 20;  /* horiz inner gap between windows */
 static const unsigned int gappiv         = 10;  /* vert inner gap between windows */
@@ -15,12 +21,31 @@ static const unsigned int gappoh         = 10;  /* horiz outer gap between windo
 static const unsigned int gappov         = 30;  /* vert outer gap between windows and screen edge */
 static const int smartgaps               = 0;   /* 1 means no outer gap when there is only one window */
 #endif // VANITYGAPS_PATCH
+#if AUTOSTART_PATCH
+static const char autostartblocksh[]     = "autostart_blocking.sh";
+static const char autostartsh[]          = "autostart.sh";
+static const char dwmdir[]               = "dwm";
+static const char localshare[]           = ".local/share";
+#endif // AUTOSTART_PATCH
+#if BAR_ANYBAR_PATCH
+static const int usealtbar               = 1;        /* 1 means use non-dwm status bar */
+static const char *altbarclass           = "Polybar"; /* Alternate bar class name */
+static const char *altbarcmd             = "$HOME/bar.sh"; /* Alternate bar launch command */
+#endif // BAR_ANYBAR_PATCH
 #if BAR_HOLDBAR_PATCH
 static const int showbar                 = 0;   /* 0 means no bar */
 #else
 static const int showbar                 = 1;   /* 0 means no bar */
 #endif // BAR_HOLDBAR_PATCH
 static const int topbar                  = 1;   /* 0 means bottom bar */
+#if TAB_PATCH
+/*  Display modes of the tab bar: never shown, always shown, shown only in  */
+/*  monocle mode in the presence of several windows.                        */
+/*  Modes after showtab_nmodes are disabled.                                */
+enum showtab_modes { showtab_never, showtab_auto, showtab_nmodes, showtab_always};
+static const int showtab                 = showtab_auto;        /* Default tab bar show mode */
+static const int toptab                  = False;               /* False means bottom tab bar */
+#endif // TAB_PATCH
 #if BAR_HEIGHT_PATCH
 static const int bar_height              = 0;   /* 0 means derive from font, >= 1 explicit height */
 #endif // BAR_HEIGHT_PATCH
@@ -35,6 +60,14 @@ static const int focusonwheel            = 0;
 static int floatposgrid_x                = 5;  /* float grid columns */
 static int floatposgrid_y                = 5;  /* float grid rows */
 #endif // FLOATPOS_PATCH
+#if RIODRAW_PATCH
+static const char slopspawnstyle[]       = "-t 0 -c 0.92,0.85,0.69,0.3 -o"; /* do NOT define -f (format) here */
+static const char slopresizestyle[]      = "-t 0 -c 0.92,0.85,0.69,0.3"; /* do NOT define -f (format) here */
+static const int riodraw_borders         = 0;  /* 0 or 1, indicates whether the area drawn using slop includes the window borders */
+#if SWALLOW_PATCH
+static const int riodraw_matchpid        = 1;  /* 0 or 1, indicates whether to match the PID of the client that was spawned with riospawn */
+#endif // SWALLOW_PATCH
+#endif // RIODRAW_PATCH
 #if BAR_STATUSPADDING_PATCH
 static const int horizpadbar             = 2;   /* horizontal padding for statusbar */
 static const int vertpadbar              = 0;   /* vertical padding for statusbar */
@@ -46,12 +79,27 @@ static const char buttonbar[]            = "<O>";
 static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int showsystray             = 1;   /* 0 means no systray */
 #endif // BAR_SYSTRAY_PATCH
+/* Indicators: see patch/bar_indicators.h for options */
+static int tagindicatortype              = INDICATOR_TOP_LEFT_SQUARE;
+static int tiledindicatortype            = INDICATOR_NONE;
+static int floatindicatortype            = INDICATOR_TOP_LEFT_SQUARE;
+#if FAKEFULLSCREEN_CLIENT_PATCH
+static int fakefsindicatortype           = INDICATOR_PLUS;
+static int floatfakefsindicatortype      = INDICATOR_PLUS_AND_LARGER_SQUARE;
+#endif // FAKEFULLSCREEN_CLIENT_PATCH
 #if ONLYQUITONEMPTY_PATCH
 static const int quit_empty_window_count = 2;   /* only allow dwm to quit if no windows are open, value here represents number of deamons */
 #endif // ONLYQUITONEMPTY_PATCH
 #if BAR_EXTRASTATUS_PATCH
 static const char statussep              = ';'; /* separator between status bars */
 #endif // BAR_EXTRASTATUS_PATCH
+#if BAR_TABGROUPS_PATCH
+#if MONOCLE_LAYOUT
+static void (*bartabmonfns[])(Monitor *) = { monocle /* , customlayoutfn */ };
+#else
+static void (*bartabmonfns[])(Monitor *) = { NULL /* , customlayoutfn */ };
+#endif // MONOCLE_LAYOUT
+#endif // BAR_TABGROUPS_PATCH
 #if BAR_PANGO_PATCH
 static const char font[]                 = "monospace 10";
 #else
@@ -59,270 +107,266 @@ static const char *fonts[]               = { "monospace:size=10" };
 #endif // BAR_PANGO_PATCH
 static const char dmenufont[]            = "monospace:size=10";
 
+#if BAR_FLEXWINTITLE_PATCH
+static char c000000[]                    = "#000000"; // placeholder value
+#endif // BAR_FLEXWINTITLE_PATCH
 static char normfgcolor[]                = "#bbbbbb";
 static char normbgcolor[]                = "#222222";
-#if !BAR_VTCOLORS_PATCH
 static char normbordercolor[]            = "#444444";
-#if FLOAT_BORDER_COLOR_PATCH
 static char normfloatcolor[]             = "#db8fd9";
-#endif // FLOAT_BORDER_COLOR_PATCH
-#endif // !BAR_VTCOLORS_PATCH
 
 static char selfgcolor[]                 = "#eeeeee";
 static char selbgcolor[]                 = "#005577";
-#if !BAR_VTCOLORS_PATCH
 static char selbordercolor[]             = "#005577";
-#if FLOAT_BORDER_COLOR_PATCH
 static char selfloatcolor[]              = "#005577";
-#endif // FLOAT_BORDER_COLOR_PATCH
 
-#if BAR_STATUSCOLORS_PATCH
-static char warnfgcolor[]                 = "#000000";
-static char warnbgcolor[]                 = "#ffff00";
-static char warnbordercolor[]             = "#ff0000";
-#if FLOAT_BORDER_COLOR_PATCH
-static char warnfloatcolor[]              = "#ffffff";
-#endif // FLOAT_BORDER_COLOR_PATCH
-#endif // BAR_STATUSCOLORS_PATCH
+static char titlenormfgcolor[]           = "#bbbbbb";
+static char titlenormbgcolor[]           = "#222222";
+static char titlenormbordercolor[]       = "#444444";
+static char titlenormfloatcolor[]        = "#db8fd9";
 
-#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-static char urgfgcolor[]                 = "#000000";
-static char urgbgcolor[]                 = "#000000";
-static char urgbordercolor[]             = "#ff0000"; // NB: patch only works with border color for now
-#if FLOAT_BORDER_COLOR_PATCH
-static char urgfloatcolor[]              = "#000000";
-#endif // FLOAT_BORDER_COLOR_PATCH
-#endif // URGENTBORDER_PATCH // BAR_STATUSCOLORS_PATCH
+static char titleselfgcolor[]            = "#eeeeee";
+static char titleselbgcolor[]            = "#005577";
+static char titleselbordercolor[]        = "#005577";
+static char titleselfloatcolor[]         = "#005577";
 
-#if BAR_AWESOMEBAR_PATCH
+static char tagsnormfgcolor[]            = "#bbbbbb";
+static char tagsnormbgcolor[]            = "#222222";
+static char tagsnormbordercolor[]        = "#444444";
+static char tagsnormfloatcolor[]         = "#db8fd9";
+
+static char tagsselfgcolor[]             = "#eeeeee";
+static char tagsselbgcolor[]             = "#005577";
+static char tagsselbordercolor[]         = "#005577";
+static char tagsselfloatcolor[]          = "#005577";
+
 static char hidfgcolor[]                 = "#005577";
 static char hidbgcolor[]                 = "#222222";
 static char hidbordercolor[]             = "#005577";
-#if FLOAT_BORDER_COLOR_PATCH
 static char hidfloatcolor[]              = "#f76e0c";
-#endif // FLOAT_BORDER_COLOR_PATCH
-#endif // BAR_AWESOMEBAR_PATCH
-#endif // BAR_VTCOLORS_PATCH
 
-#if BAR_POWERLINE_STATUS_PATCH || (BAR_TITLECOLOR_PATCH && !BAR_VTCOLORS_PATCH)
-static char titlefgcolor[]               = "#FFF7D4";
-static char titlebgcolor[]               = "#330000";
-static char titlebordercolor[]           = "#330000";
-#if FLOAT_BORDER_COLOR_PATCH
-static char titlefloatcolor[]            = "#f76e0c";
-#endif // FLOAT_BORDER_COLOR_PATCH
-static char titleselfgcolor[]            = "#FFF7D4";
-static char titleselbgcolor[]            = "#c278b6";
-static char titleselbordercolor[]        = "#330000";
-#if FLOAT_BORDER_COLOR_PATCH
-static char titleselfloatcolor[]         = "#FF0000";
-#endif // FLOAT_BORDER_COLOR_PATCH
-#endif // BAR_POWERLINE_STATUS_PATCH | BAR_TITLECOLOR_PATCH
+static char urgfgcolor[]                 = "#bbbbbb";
+static char urgbgcolor[]                 = "#222222";
+static char urgbordercolor[]             = "#ff0000";
+static char urgfloatcolor[]              = "#db8fd9";
+
+#if BAR_FLEXWINTITLE_PATCH
+static char normTTBbgcolor[]             = "#330000";
+static char normLTRbgcolor[]             = "#330033";
+static char normMONObgcolor[]            = "#000033";
+static char normGRIDbgcolor[]            = "#003300";
+static char normGRD1bgcolor[]            = "#003300";
+static char normGRD2bgcolor[]            = "#003300";
+static char normGRDMbgcolor[]            = "#506600";
+static char normHGRDbgcolor[]            = "#b96600";
+static char normDWDLbgcolor[]            = "#003333";
+static char normSPRLbgcolor[]            = "#333300";
+static char normfloatbgcolor[]           = "#115577";
+static char actTTBbgcolor[]              = "#440000";
+static char actLTRbgcolor[]              = "#440044";
+static char actMONObgcolor[]             = "#000044";
+static char actGRIDbgcolor[]             = "#004400";
+static char actGRD1bgcolor[]             = "#004400";
+static char actGRD2bgcolor[]             = "#004400";
+static char actGRDMbgcolor[]             = "#507711";
+static char actHGRDbgcolor[]             = "#b97711";
+static char actDWDLbgcolor[]             = "#004444";
+static char actSPRLbgcolor[]             = "#444400";
+static char actfloatbgcolor[]            = "#116688";
+static char selTTBbgcolor[]              = "#550000";
+static char selLTRbgcolor[]              = "#550055";
+static char selMONObgcolor[]             = "#212171";
+static char selGRIDbgcolor[]             = "#005500";
+static char selGRD1bgcolor[]             = "#005500";
+static char selGRD2bgcolor[]             = "#005500";
+static char selGRDMbgcolor[]             = "#508822";
+static char selHGRDbgcolor[]             = "#b98822";
+static char selDWDLbgcolor[]             = "#005555";
+static char selSPRLbgcolor[]             = "#555500";
+static char selfloatbgcolor[]            = "#117799";
+#endif // BAR_FLEXWINTITLE_PATCH
 
 #if BAR_ALPHA_PATCH
 static const unsigned int baralpha = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
 static const unsigned int alphas[][3] = {
-	/*                    fg      bg        border     */
-	[SchemeNorm]      = { OPAQUE, baralpha, borderalpha },
-	[SchemeSel]       = { OPAQUE, baralpha, borderalpha },
-	#if BAR_STATUSCOLORS_PATCH
-	[SchemeWarn]      = { OPAQUE, baralpha, borderalpha },
-	#endif // BAR_STATUSCOLORS_PATCH
-	#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	[SchemeUrg]       = { OPAQUE, baralpha, borderalpha },
-	#endif // URGENTBORDER_PATCH / BAR_STATUSCOLORS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	[SchemeHid]       = { OPAQUE, baralpha, borderalpha },
-	#endif // BAR_AWESOMEBAR_PATCH
-	#if BAR_VTCOLORS_PATCH
-	[SchemeTagsNorm]  = { OPAQUE, baralpha, borderalpha },
-	[SchemeTagsSel]   = { OPAQUE, baralpha, borderalpha },
-	[SchemeTitleNorm] = { OPAQUE, baralpha, borderalpha },
-	[SchemeTitleSel]  = { OPAQUE, baralpha, borderalpha },
-	[SchemeStatus]    = { OPAQUE, baralpha, borderalpha },
-	#elif BAR_TITLECOLOR_PATCH
-	[SchemeTitle]     = { OPAQUE, baralpha, borderalpha },
-	#endif // BAR_VTCOLORS_PATCH / BAR_TITLECOLOR_PATCH
+	/*                       fg      bg        border     */
+	[SchemeNorm]         = { OPAQUE, baralpha, borderalpha },
+	[SchemeSel]          = { OPAQUE, baralpha, borderalpha },
+	[SchemeTitleNorm]    = { OPAQUE, baralpha, borderalpha },
+	[SchemeTitleSel]     = { OPAQUE, baralpha, borderalpha },
+	[SchemeTagsNorm]     = { OPAQUE, baralpha, borderalpha },
+	[SchemeTagsSel]      = { OPAQUE, baralpha, borderalpha },
+	[SchemeHid]          = { OPAQUE, baralpha, borderalpha },
+	[SchemeUrg]          = { OPAQUE, baralpha, borderalpha },
+	#if BAR_FLEXWINTITLE_PATCH
+	[SchemeFlexActTTB]   = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActLTR]   = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActMONO]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActGRID]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActGRD1]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActGRD2]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActGRDM]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActHGRD]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActDWDL]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActSPRL]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexActFloat] = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaTTB]   = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaLTR]   = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaMONO]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaGRID]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaGRD1]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaGRD2]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaGRDM]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaHGRD]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaDWDL]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaSPRL]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexInaFloat] = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelTTB]   = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelLTR]   = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelMONO]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelGRID]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelGRD1]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelGRD2]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelGRDM]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelHGRD]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelDWDL]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelSPRL]  = { OPAQUE, baralpha, borderalpha },
+	[SchemeFlexSelFloat] = { OPAQUE, baralpha, borderalpha },
+	#endif // BAR_FLEXWINTITLE_PATCH
 };
 #endif // BAR_ALPHA_PATCH
-#if BAR_VTCOLORS_PATCH && FLOAT_BORDER_COLOR_PATCH
+#if BAR_VTCOLORS_PATCH
 static const char title_bg_dark[]   = "#303030";
 static const char title_bg_light[]  = "#fdfdfd";
 static const int color_ptrs[][ColCount] = {
-	/*                              fg         bg         border    float */
-	[SchemeNorm]                = { -1,        -1,        5,        12 },
-	[SchemeSel]                 = { -1,        -1,        11,       13 },
-	#if BAR_STATUSCOLORS_PATCH
-	[SchemeWarn]                = { -1,        1,         1,        14 },
-	#endif // BAR_STATUSCOLORS_PATCH
-	#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	[SchemeUrg]                 = { 7,         9,         9,        15 },
-	#endif // URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	[SchemeHid]                 = { 5,         0,         0,        -1 },
-	#endif // BAR_AWESOMEBAR_PATCH
-	[SchemeTagsNorm]            = { 2,         0,         0,        -1 },
-	[SchemeTagsSel]             = { 6,         5,         5,        -1 },
-	[SchemeTitleNorm]           = { 6,         -1,        -1,       -1 },
-	[SchemeTitleSel]            = { 6,         -1,        -1,       -1 },
-	[SchemeStatus]              = { 2,         0,         0,        -1 },
+	/*                       fg      bg      border  float */
+	[SchemeNorm]         = { -1,     -1,     5,      12 },
+	[SchemeSel]          = { -1,     -1,     11,     13 },
+	[SchemeTitleNorm]    = { 6,      -1,     -1,     -1 },
+	[SchemeTitleSel]     = { 6,      -1,     -1,     -1 },
+	[SchemeTagsNorm]     = { 2,      0,      0,      -1 },
+	[SchemeTagsSel]      = { 6,      5,      5,      -1 },
+	[SchemeHid]          = { 5,      0,      0,      -1 },
+	[SchemeUrg]          = { 7,      9,      9,      15 },
 };
-static char colors[][ColCount][8] = {
-	/*                              fg         bg         border     float     */
-	[SchemeNorm]                = { "#000000", "#000000", "#000000", "#000000" },
-	[SchemeSel]                 = { "#000000", "#000000", "#000000", "#000000" },
-	#if BAR_STATUSCOLORS_PATCH
-	[SchemeWarn]                = { "#000000", "#000000", "#000000", "#000000" },
-	#endif // BAR_STATUSCOLORS_PATCH
-	#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	[SchemeUrg]                 = { "#000000", "#000000", "#000000", "#000000" },
-	#endif // URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	[SchemeHid]                 = { "#000000", "#000000", "#000000", "#000000" },
-	#endif // BAR_AWESOMEBAR_PATCH
-	[SchemeTagsNorm]            = { "#000000", "#000000", "#000000", "#000000" },
-	[SchemeTagsSel]             = { "#000000", "#000000", "#000000", "#000000" },
-	[SchemeTitleNorm]           = { "#000000", "#000000", "#000000", "#000000" },
-	[SchemeTitleSel]            = { "#000000", "#000000", "#000000", "#000000" },
-	[SchemeStatus]              = { "#000000", "#000000", "#000000", "#000000" },
+#endif // BAR_VTCOLORS_PATCH
+
+static char *colors[][ColCount] = {
+	/*                       fg                bg                border                float */
+	[SchemeNorm]         = { normfgcolor,      normbgcolor,      normbordercolor,      normfloatcolor },
+	[SchemeSel]          = { selfgcolor,       selbgcolor,       selbordercolor,       selfloatcolor },
+	[SchemeTitleNorm]    = { titlenormfgcolor, titlenormbgcolor, titlenormbordercolor, titlenormfloatcolor },
+	[SchemeTitleSel]     = { titleselfgcolor,  titleselbgcolor,  titleselbordercolor,  titleselfloatcolor },
+	[SchemeTagsNorm]     = { tagsnormfgcolor,  tagsnormbgcolor,  tagsnormbordercolor,  tagsnormfloatcolor },
+	[SchemeTagsSel]      = { tagsselfgcolor,   tagsselbgcolor,   tagsselbordercolor,   tagsselfloatcolor },
+	[SchemeHid]          = { hidfgcolor,       hidbgcolor,       hidbordercolor,       hidfloatcolor },
+	[SchemeUrg]          = { urgfgcolor,       urgbgcolor,       urgbordercolor,       urgfloatcolor },
+	#if BAR_FLEXWINTITLE_PATCH
+	[SchemeFlexActTTB]   = { titleselfgcolor,  actTTBbgcolor,    actTTBbgcolor,        c000000 },
+	[SchemeFlexActLTR]   = { titleselfgcolor,  actLTRbgcolor,    actLTRbgcolor,        c000000 },
+	[SchemeFlexActMONO]  = { titleselfgcolor,  actMONObgcolor,   actMONObgcolor,       c000000 },
+	[SchemeFlexActGRID]  = { titleselfgcolor,  actGRIDbgcolor,   actGRIDbgcolor,       c000000 },
+	[SchemeFlexActGRD1]  = { titleselfgcolor,  actGRD1bgcolor,   actGRD1bgcolor,       c000000 },
+	[SchemeFlexActGRD2]  = { titleselfgcolor,  actGRD2bgcolor,   actGRD2bgcolor,       c000000 },
+	[SchemeFlexActGRDM]  = { titleselfgcolor,  actGRDMbgcolor,   actGRDMbgcolor,       c000000 },
+	[SchemeFlexActHGRD]  = { titleselfgcolor,  actHGRDbgcolor,   actHGRDbgcolor,       c000000 },
+	[SchemeFlexActDWDL]  = { titleselfgcolor,  actDWDLbgcolor,   actDWDLbgcolor,       c000000 },
+	[SchemeFlexActSPRL]  = { titleselfgcolor,  actSPRLbgcolor,   actSPRLbgcolor,       c000000 },
+	[SchemeFlexActFloat] = { titleselfgcolor,  actfloatbgcolor,  actfloatbgcolor,      c000000 },
+	[SchemeFlexInaTTB]   = { titlenormfgcolor, normTTBbgcolor,   normTTBbgcolor,       c000000 },
+	[SchemeFlexInaLTR]   = { titlenormfgcolor, normLTRbgcolor,   normLTRbgcolor,       c000000 },
+	[SchemeFlexInaMONO]  = { titlenormfgcolor, normMONObgcolor,  normMONObgcolor,      c000000 },
+	[SchemeFlexInaGRID]  = { titlenormfgcolor, normGRIDbgcolor,  normGRIDbgcolor,      c000000 },
+	[SchemeFlexInaGRD1]  = { titlenormfgcolor, normGRD1bgcolor,  normGRD1bgcolor,      c000000 },
+	[SchemeFlexInaGRD2]  = { titlenormfgcolor, normGRD2bgcolor,  normGRD2bgcolor,      c000000 },
+	[SchemeFlexInaGRDM]  = { titlenormfgcolor, normGRDMbgcolor,  normGRDMbgcolor,      c000000 },
+	[SchemeFlexInaHGRD]  = { titlenormfgcolor, normHGRDbgcolor,  normHGRDbgcolor,      c000000 },
+	[SchemeFlexInaDWDL]  = { titlenormfgcolor, normDWDLbgcolor,  normDWDLbgcolor,      c000000 },
+	[SchemeFlexInaSPRL]  = { titlenormfgcolor, normSPRLbgcolor,  normSPRLbgcolor,      c000000 },
+	[SchemeFlexInaFloat] = { titlenormfgcolor, normfloatbgcolor, normfloatbgcolor,     c000000 },
+	[SchemeFlexSelTTB]   = { titleselfgcolor,  selTTBbgcolor,    selTTBbgcolor,        c000000 },
+	[SchemeFlexSelLTR]   = { titleselfgcolor,  selLTRbgcolor,    selLTRbgcolor,        c000000 },
+	[SchemeFlexSelMONO]  = { titleselfgcolor,  selMONObgcolor,   selMONObgcolor,       c000000 },
+	[SchemeFlexSelGRID]  = { titleselfgcolor,  selGRIDbgcolor,   selGRIDbgcolor,       c000000 },
+	[SchemeFlexSelGRD1]  = { titleselfgcolor,  selGRD1bgcolor,   selGRD1bgcolor,       c000000 },
+	[SchemeFlexSelGRD2]  = { titleselfgcolor,  selGRD2bgcolor,   selGRD2bgcolor,       c000000 },
+	[SchemeFlexSelGRDM]  = { titleselfgcolor,  selGRDMbgcolor,   selGRDMbgcolor,       c000000 },
+	[SchemeFlexSelHGRD]  = { titleselfgcolor,  selHGRDbgcolor,   selHGRDbgcolor,       c000000 },
+	[SchemeFlexSelDWDL]  = { titleselfgcolor,  selDWDLbgcolor,   selDWDLbgcolor,       c000000 },
+	[SchemeFlexSelSPRL]  = { titleselfgcolor,  selSPRLbgcolor,   selSPRLbgcolor,       c000000 },
+	[SchemeFlexSelFloat] = { titleselfgcolor,  selfloatbgcolor,  selfloatbgcolor,      c000000 },
+	#endif // BAR_FLEXWINTITLE_PATCH
 };
-#elif BAR_VTCOLORS_PATCH
-static const char title_bg_dark[]   = "#303030";
-static const char title_bg_light[]  = "#fdfdfd";
-static const int color_ptrs[][ColCount] = {
-	/*                              fg         bg         border    */
-	[SchemeNorm]                = { -1,        -1,        5 },
-	[SchemeSel]                 = { -1,        -1,        11 },
-	#if BAR_STATUSCOLORS_PATCH
-	[SchemeWarn]                = { -1,        1,         1 },
-	#endif // BAR_STATUSCOLORS_PATCH
-	#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	[SchemeUrg]                 = { 7,         9,         9 },
-	#endif // URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	[SchemeHid]                 = { 5,         0,         0 },
-	#endif // BAR_AWESOMEBAR_PATCH
-	[SchemeTagsNorm]            = { 2,         0,         0 },
-	[SchemeTagsSel]             = { 6,         5,         5 },
-	[SchemeTitleNorm]           = { 6,         -1,        -1 },
-	[SchemeTitleSel]            = { 6,         -1,        -1 },
-	[SchemeStatus]              = { 2,         0,         0 },
-};
-static char colors[][ColCount][8] = {
-	/*                              fg         bg         border    */
-	[SchemeNorm]                = { "#000000", "#000000", "#000000" },
-	[SchemeSel]                 = { "#000000", "#000000", "#000000" },
-	#if BAR_STATUSCOLORS_PATCH
-	[SchemeWarn]                = { "#000000", "#000000", "#000000" },
-	#endif // BAR_STATUSCOLORS_PATCH
-	#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	[SchemeUrg]                 = { "#000000", "#000000", "#000000" },
-	#endif // URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	[SchemeHid]                 = { "#000000", "#000000", "#000000" },
-	#endif // BAR_AWESOMEBAR_PATCH
-	[SchemeTagsNorm]            = { "#000000", "#000000", "#000000" },
-	[SchemeTagsSel]             = { "#000000", "#000000", "#000000" },
-	[SchemeTitleNorm]           = { "#000000", "#000000", "#000000" },
-	[SchemeTitleSel]            = { "#000000", "#000000", "#000000" },
-	[SchemeStatus]              = { "#000000", "#000000", "#000000" },
-};
-#elif FLOAT_BORDER_COLOR_PATCH
-static
-#if !XRDB_PATCH
-const
-#endif // XRDB_PATCH
-char *colors[][ColCount] = {
-	/*                fg            bg            border            float          */
-	[SchemeNorm]  = { normfgcolor,  normbgcolor,  normbordercolor,  normfloatcolor },
-	[SchemeSel]   = { selfgcolor,   selbgcolor,   selbordercolor,   selfloatcolor  },
-	#if BAR_STATUSCOLORS_PATCH
-	[SchemeWarn]  = { warnfgcolor,  warnbgcolor,  warnbordercolor,  warnfloatcolor },
-	#endif // BAR_STATUSCOLORS_PATCH
-	#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	[SchemeUrg]   = { urgfgcolor,   urgbgcolor,   urgbordercolor,   urgfloatcolor },
-	#endif // URGENTBORDER_PATCH / BAR_STATUSCOLORS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	[SchemeHid]   = { hidfgcolor,   hidbgcolor,   hidbordercolor,   hidfloatcolor },
-	#endif // BAR_AWESOMEBAR_PATCH
-	#if BAR_TITLECOLOR_PATCH
-	[SchemeTitle] = { titlefgcolor, titlebgcolor, titlebordercolor, titlefloatcolor },
-	#endif // BAR_TITLECOLOR_PATCH
-};
-#else // !BAR_VTCOLORS_PATCH && !FLOAT_BORDER_COLOR_PATCH
-static
-#if !XRDB_PATCH
-const
-#endif // XRDB_PATCH
-char *colors[][ColCount] = {
-	/*                fg            bg            border          */
-	[SchemeNorm]  = { normfgcolor,  normbgcolor,  normbordercolor },
-	[SchemeSel]   = { selfgcolor,   selbgcolor,   selbordercolor  },
-	#if BAR_STATUSCOLORS_PATCH
-	[SchemeWarn]  = { warnfgcolor,  warnbgcolor,  warnbordercolor },
-	#endif // BAR_STATUSCOLORS_PATCH
-	#if URGENTBORDER_PATCH || BAR_STATUSCOLORS_PATCH
-	[SchemeUrg]   = { urgfgcolor,   urgbgcolor,   urgbordercolor },
-	#endif // URGENTBORDER_PATCH / BAR_STATUSCOLORS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	[SchemeHid]   = { hidfgcolor,   hidbgcolor,   hidbordercolor  },
-	#endif // BAR_AWESOMEBAR_PATCH
-	#if BAR_TITLECOLOR_PATCH
-	[SchemeTitle] = { titlefgcolor, titlebgcolor, titlebordercolor },
-	#endif // BAR_TITLECOLOR_PATCH
-};
-#endif // BAR_VTCOLORS_PATCH / FLOAT_BORDER_COLOR_PATCH
 
 #if BAR_POWERLINE_STATUS_PATCH
-static
-#if !XRDB_PATCH
-const
-#endif // XRDB_PATCH
-char *statuscolors[][ColCount] = {
-#if FLOAT_BORDER_COLOR_PATCH
-	/*                    fg               bg               border               float */
-	[SchemeNorm]      = { normfgcolor,     normbgcolor,     normbordercolor,     normfloatcolor     },
-	[SchemeSel]       = { selfgcolor,      selbgcolor,      selbordercolor,      selfloatcolor      },
-	[SchemeTitleNorm] = { titlefgcolor,    titlebgcolor,    titlebordercolor,    titlefloatcolor    },
-	[SchemeTitleSel]  = { titleselfgcolor, titleselbgcolor, titleselbordercolor, titleselfloatcolor },
-#else
-	/*                    fg               bg               border   */
-	[SchemeNorm]      = { normfgcolor,     normbgcolor,     normbordercolor },
-	[SchemeSel]       = { selfgcolor,      selbgcolor,      selbordercolor  },
-	[SchemeTitleNorm] = { titlefgcolor,    titlebgcolor,    titlebordercolor },
-	[SchemeTitleSel]  = { titleselfgcolor, titleselbgcolor, titleselbordercolor },
-#endif // FLOAT_BORDER_COLOR_PATCH
+static char *statuscolors[][ColCount] = {
+	/*                       fg                bg                border                float */
+	[SchemeNorm]         = { normfgcolor,      normbgcolor,      normbordercolor,      normfloatcolor },
+	[SchemeSel]          = { selfgcolor,       selbgcolor,       selbordercolor,       selfloatcolor },
+	[SchemeTitleNorm]    = { titlenormfgcolor, titlenormbgcolor, titlenormbordercolor, titlenormfloatcolor },
+	[SchemeTitleSel]     = { titleselfgcolor,  titleselbgcolor,  titleselbordercolor,  titleselfloatcolor },
+	[SchemeTagsNorm]     = { tagsnormfgcolor,  tagsnormbgcolor,  tagsnormbordercolor,  tagsnormfloatcolor },
+	[SchemeTagsSel]      = { tagsselfgcolor,   tagsselbgcolor,   tagsselbordercolor,   tagsselfloatcolor },
+	[SchemeHid]          = { hidfgcolor,       hidbgcolor,       hidbordercolor,       hidfloatcolor },
+	[SchemeUrg]          = { urgfgcolor,       urgbgcolor,       urgbordercolor,       urgfloatcolor },
 };
 #endif // BAR_POWERLINE_STATUS_PATCH
 
+#if BAR_LAYOUTMENU_PATCH
+static const char *layoutmenu_cmd = "layoutmenu.sh";
+#endif
+
+#if COOL_AUTOSTART_PATCH
+static const char *const autostart[] = {
+	"st", NULL,
+	NULL /* terminate */
+};
+#endif // COOL_AUTOSTART_PATCH
+
 #if SCRATCHPADS_PATCH
 const char *spcmd1[] = {"st", "-n", "spterm", "-g", "120x34", NULL };
-const char *spcmd2[] = {"st", "-n", "spfm", "-g", "144x41", "-e", "ranger", NULL };
-const char *spcmd3[] = {"keepassxc", NULL };
 static Sp scratchpads[] = {
    /* name          cmd  */
    {"spterm",      spcmd1},
-   {"spranger",    spcmd2},
-   {"keepassxc",   spcmd3},
 };
 #endif // SCRATCHPADS_PATCH
 
-/* tagging */
-#if BAR_EWMHTAGS_PATCH
-static char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-#else
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-#endif // BAR_EWMHTAGS_PATCH
-#if BAR_ALTERNATIVE_TAGS_PATCH
-static const char *tagsalt[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-#endif // BAR_ALTERNATIVE_TAGS_PATCH
+/* Tags
+ * In a traditional dwm the number of tags in use can be changed simply by changing the number
+ * of strings in the tags array. This build does things a bit different which has some added
+ * benefits. If you need to change the number of tags here then change the NUMTAGS macro in dwm.c.
+ *
+ * Examples:
+ *
+ *  1) static char *tagicons[][NUMTAGS*2] = {
+ *         [DEFAULT_TAGS] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I" },
+ *     }
+ *
+ *  2) static char *tagicons[][1] = {
+ *         [DEFAULT_TAGS] = { "•" },
+ *     }
+ *
+ * The first example would result in the tags on the first monitor to be 1 through 9, while the
+ * tags for the second monitor would be named A through I. A third monitor would start again at
+ * 1 through 9 while the tags on a fourth monitor would also be named A through I. Note the tags
+ * count of NUMTAGS*2 in the array initialiser which defines how many tag text / icon exists in
+ * the array. This can be changed to *3 to add separate icons for a third monitor.
+ *
+ * For the second example each tag would be represented as a bullet point. Both cases work the
+ * same from a technical standpoint - the icon index is derived from the tag index and the monitor
+ * index. If the icon index is is greater than the number of tag icons then it will wrap around
+ * until it an icon matches. Similarly if there are two tag icons then it would alternate between
+ * them. This works seamlessly with alternative tags and alttagsdecoration patches.
+ */
+static char *tagicons[][NUMTAGS] = {
+	[DEFAULT_TAGS]        = { "1", "2", "3", "4", "5", "6", "7", "8", "9" },
+	[ALTERNATIVE_TAGS]    = { "A", "B", "C", "D", "E", "F", "G", "H", "I" },
+	[ALT_TAGS_DECORATION] = { "<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>", "<8>", "<9>" },
+};
 
 #if BAR_TAGGRID_PATCH
 /* grid of tags */
-#define DRAWCLASSICTAGS             1 << 0
-#define DRAWTAGGRID                 1 << 1
-
 #define SWITCHTAG_UP                1 << 0
 #define SWITCHTAG_DOWN              1 << 1
 #define SWITCHTAG_LEFT              1 << 2
@@ -332,7 +376,6 @@ static const char *tagsalt[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 #define SWITCHTAG_VIEW              1 << 6
 #define SWITCHTAG_TOGGLEVIEW        1 << 7
 
-static const unsigned int drawtagmask = DRAWTAGGRID; /* | DRAWCLASSICTAGS to show classic row of tags */
 static const int tagrows = 2;
 #endif // BAR_TAGGRID_PATCH
 
@@ -369,8 +412,6 @@ static const Rule rules[] = {
 	RULE(.class = "Firefox", .tags = 1 << 7)
 	#if SCRATCHPADS_PATCH
 	RULE(.instance = "spterm", .tags = SPTAG(0), .isfloating = 1)
-	RULE(.instance = "spfm", .tags = SPTAG(1), .isfloating = 1)
-	RULE(.instance = "keepassxc", .tags = SPTAG(2))
 	#endif // SCRATCHPADS_PATCH
 };
 
@@ -390,6 +431,15 @@ static const MonitorRule monrules[] = {
 #endif // PERTAG_PATCH
 #endif // MONITOR_RULES_PATCH
 
+#if INSETS_PATCH
+static const Inset default_inset = {
+	.x = 0,
+	.y = 30,
+	.w = 0,
+	.h = 0,
+};
+#endif // INSETS_PATCH
+
 /* Bar rules allow you to configure what is shown where on the bar, as well as
  * introducing your own bar modules.
  *
@@ -403,227 +453,69 @@ static const MonitorRule monrules[] = {
  *    name - does nothing, intended for visual clue and for logging / debugging
  */
 static const BarRule barrules[] = {
-	/* monitor  bar    alignment         widthfunc              drawfunc              clickfunc           name */
+	/* monitor  bar    alignment         widthfunc                drawfunc                clickfunc                name */
 	#if BAR_STATUSBUTTON_PATCH
-	{ -1,       0,     BAR_ALIGN_LEFT,   width_stbutton,        draw_stbutton,        click_stbutton,     "statusbutton" },
+	{ -1,       0,     BAR_ALIGN_LEFT,   width_stbutton,          draw_stbutton,          click_stbutton,          "statusbutton" },
 	#endif // BAR_STATUSBUTTON_PATCH
 	#if BAR_POWERLINE_TAGS_PATCH
-	{ 0,       0,     BAR_ALIGN_LEFT,    width_pwrl_tags,       draw_pwrl_tags,       click_pwrl_tags,    "powerline_tags" },
+	{  0,       0,     BAR_ALIGN_LEFT,   width_pwrl_tags,         draw_pwrl_tags,         click_pwrl_tags,         "powerline_tags" },
 	#endif // BAR_POWERLINE_TAGS_PATCH
 	#if BAR_TAGS_PATCH
-	{ -1,       0,     BAR_ALIGN_LEFT,   width_tags,            draw_tags,            click_tags,         "tags" },
+	{ -1,       0,     BAR_ALIGN_LEFT,   width_tags,              draw_tags,              click_tags,              "tags" },
 	#endif // BAR_TAGS_PATCH
 	#if BAR_TAGGRID_PATCH
-	{ -1,       0,     BAR_ALIGN_LEFT,   width_taggrid,         draw_taggrid,         click_taggrid,      "taggrid" },
+	{ -1,       0,     BAR_ALIGN_LEFT,   width_taggrid,           draw_taggrid,           click_taggrid,           "taggrid" },
 	#endif // BAR_TAGGRID_PATCH
-	#if BAR_LTSYMBOL_PATCH
-	{ -1,       0,     BAR_ALIGN_LEFT,   width_ltsymbol,        draw_ltsymbol,        click_ltsymbol,     "layout" },
-	#endif // BAR_LTSYMBOL_PATCH
 	#if BAR_SYSTRAY_PATCH
-	{  0,       0,     BAR_ALIGN_RIGHT,  width_systray,         draw_systray,         click_systray,      "systray" },
+	{  0,       0,     BAR_ALIGN_RIGHT,  width_systray,           draw_systray,           click_systray,           "systray" },
 	#endif // BAR_SYSTRAY_PATCH
+	#if BAR_LTSYMBOL_PATCH
+	{ -1,       0,     BAR_ALIGN_LEFT,   width_ltsymbol,          draw_ltsymbol,          click_ltsymbol,          "layout" },
+	#endif // BAR_LTSYMBOL_PATCH
 	#if BAR_STATUS2D_PATCH && BAR_STATUSCMD_PATCH
-	{ 'A',      0,     BAR_ALIGN_RIGHT,  width_status2d,        draw_status2d,        click_statuscmd,    "status2d" },
+	{ 'A',      0,     BAR_ALIGN_RIGHT,  width_status2d,          draw_status2d,          click_statuscmd,         "status2d" },
 	#elif BAR_STATUS2D_PATCH
-	{ 'A',      0,     BAR_ALIGN_RIGHT,  width_status2d,        draw_status2d,        click_status2d,     "status2d" },
+	{ 'A',      0,     BAR_ALIGN_RIGHT,  width_status2d,          draw_status2d,          click_status2d,          "status2d" },
 	#elif BAR_POWERLINE_STATUS_PATCH
-	{ 0,       0,     BAR_ALIGN_RIGHT,   width_pwrl_status,     draw_pwrl_status,     click_pwrl_status,  "powerline_status" },
+	{  0,       0,     BAR_ALIGN_RIGHT,  width_pwrl_status,       draw_pwrl_status,       click_pwrl_status,       "powerline_status" },
+	#elif BAR_STATUS_PATCH && BAR_STATUSCMD_PATCH
+	{  0,       0,     BAR_ALIGN_RIGHT,  width_status,            draw_status,            click_statuscmd,         "status" },
 	#elif BAR_STATUS_PATCH
-	{ 'A',      0,     BAR_ALIGN_RIGHT,  width_status,          draw_status,          click_status,       "status" },
+	{ 'A',      0,     BAR_ALIGN_RIGHT,  width_status,            draw_status,            click_status,            "status" },
 	#endif // BAR_STATUS2D_PATCH | BAR_STATUSCMD_PATCH
-	#if BAR_AWESOMEBAR_PATCH
-	{ -1,       0,     BAR_ALIGN_NONE,   width_awesomebar,      draw_awesomebar,      click_awesomebar,   "awesomebar" },
+	#if BAR_FLEXWINTITLE_PATCH
+	{ -1,       0,     BAR_ALIGN_NONE,   width_flexwintitle,      draw_flexwintitle,      click_flexwintitle,      "flexwintitle" },
+	#elif BAR_TABGROUPS_PATCH
+	{ -1,       0,     BAR_ALIGN_NONE,   width_bartabgroups,      draw_bartabgroups,      click_bartabgroups,      "bartabgroups" },
+	#elif BAR_AWESOMEBAR_PATCH
+	{ -1,       0,     BAR_ALIGN_NONE,   width_awesomebar,        draw_awesomebar,        click_awesomebar,        "awesomebar" },
 	#elif BAR_FANCYBAR_PATCH
-	{ -1,       0,     BAR_ALIGN_NONE,   width_fancybar,        draw_fancybar,        click_fancybar,     "fancybar" },
+	{ -1,       0,     BAR_ALIGN_NONE,   width_fancybar,          draw_fancybar,          click_fancybar,          "fancybar" },
 	#elif BAR_WINTITLE_PATCH
-	{ -1,       0,     BAR_ALIGN_NONE,   width_wintitle,        draw_wintitle,        click_wintitle,     "wintitle" },
-	#endif // BAR_AWESOMEBAR_PATCH | BAR_FANCYBAR_PATCH BAR_WINTITLE_PATCH
+	{ -1,       0,     BAR_ALIGN_NONE,   width_wintitle,          draw_wintitle,          click_wintitle,          "wintitle" },
+	#endif // BAR_TABGROUPS_PATCH | BAR_AWESOMEBAR_PATCH | BAR_FANCYBAR_PATCH | BAR_WINTITLE_PATCH
 	#if BAR_EXTRASTATUS_PATCH
 	#if BAR_STATUS2D_PATCH && BAR_STATUSCMD_PATCH
-	{ 'A',      1,     BAR_ALIGN_CENTER, width_status2d_es,     draw_status2d_es,     click_statuscmd_es, "status2d_es" },
+	{ 'A',      1,     BAR_ALIGN_CENTER, width_status2d_es,       draw_status2d_es,       click_statuscmd_es,      "status2d_es" },
 	#elif BAR_STATUS2D_PATCH
-	{ 'A',      1,     BAR_ALIGN_CENTER, width_status2d_es,     draw_status2d_es,     click_status2d,     "status2d_es" },
+	{ 'A',      1,     BAR_ALIGN_CENTER, width_status2d_es,       draw_status2d_es,       click_status2d,          "status2d_es" },
 	#elif BAR_POWERLINE_STATUS_PATCH
-	{ 0,       1,     BAR_ALIGN_RIGHT,   width_pwrl_status_es,  draw_pwrl_status_es,  click_pwrl_status,  "powerline_status" },
+	{  0,       1,     BAR_ALIGN_RIGHT,  width_pwrl_status_es,    draw_pwrl_status_es,    click_pwrl_status,       "powerline_status" },
 	#elif BAR_STATUSCMD_PATCH && BAR_STATUS_PATCH
-	{ 'A',      1,     BAR_ALIGN_CENTER, width_status_es,       draw_status_es,       click_statuscmd_es, "status_es" },
+	{ 'A',      1,     BAR_ALIGN_CENTER, width_status_es,         draw_status_es,         click_statuscmd_es,      "status_es" },
 	#elif BAR_STATUS_PATCH
-	{ 'A',      1,     BAR_ALIGN_CENTER, width_status_es,       draw_status_es,       click_status,       "status_es" },
+	{ 'A',      1,     BAR_ALIGN_CENTER, width_status_es,         draw_status_es,         click_status,            "status_es" },
 	#endif // BAR_STATUS2D_PATCH | BAR_STATUSCMD_PATCH
 	#endif // BAR_EXTRASTATUS_PATCH
+	#if BAR_FLEXWINTITLE_PATCH
+	#if BAR_WINTITLE_HIDDEN_PATCH
+	{ -1,       1,  BAR_ALIGN_RIGHT_RIGHT, width_wintitle_hidden, draw_wintitle_hidden,   click_wintitle_hidden,   "wintitle_hidden" },
+	#endif
+	#if BAR_WINTITLE_FLOATING_PATCH
+	{ -1,       1,     BAR_ALIGN_LEFT,   width_wintitle_floating, draw_wintitle_floating, click_wintitle_floating, "wintitle_floating" },
+	#endif // BAR_WINTITLE_FLOATING_PATCH
+	#endif // BAR_FLEXWINTITLE_PATCH
 };
-
-#if DWMC_PATCH
-/* signal definitions */
-/* signum must be greater than 0 */
-/* trigger signals using `xsetroot -name "fsignal:<signame> [<type> <value>]"` */
-static Signal signals[] = {
-	/* signum                    function */
-	{ "focusstack",              focusstack },
-	{ "setmfact",                setmfact },
-	{ "togglebar",               togglebar },
-	{ "incnmaster",              incnmaster },
-	{ "togglefloating",          togglefloating },
-	{ "focusmon",                focusmon },
-	#if STACKER_PATCH
-	{ "pushstack",               pushstack },
-	#endif // STACKER_PATCH
-	#if FOCUSURGENT_PATCH
-	{ "focusurgent",             focusurgent },
-	#endif // FOCUSURGENT_PATCH
-	#if FOCUSADJACENTTAG_PATCH
-	{ "viewtoleft",              viewtoleft },
-	{ "viewtoright",             viewtoright },
-	{ "tagtoleft",               tagtoleft },
-	{ "tagtoright",              tagtoright},
-	{ "tagandviewtoleft",        tagandviewtoleft },
-	{ "tagandviewtoright",       tagandviewtoright },
-	#endif // FOCUSADJACENTTAG_PATCH
-	#if SWAPFOCUS_PATCH && PERTAG_PATCH
-	{ "swapfocus",               swapfocus },
-	#endif // SWAPFOCUS_PATCH
-	#if SWITCHCOL_PATCH
-	{ "switchcol",               switchcol },
-	#endif // SWITCHCOL_PATCH
-	#if ROTATESTACK_PATCH
-	{ "rotatestack",             rotatestack },
-	#endif // ROTATESTACK_PATCH
-	#if INPLACEROTATE_PATCH
-	{ "inplacerotate",           inplacerotate },
-	#endif // INPLACEROTATE_PATCH
-	#if PUSH_PATCH || PUSH_NO_MASTER_PATCH
-	{ "pushdown",                pushdown },
-	{ "pushup",                  pushup },
-	#endif // PUSH_PATCH / PUSH_NO_MASTER_PATCH
-	#if FLEXTILE_DELUXE_LAYOUT
-	{ "incnstack",               incnstack },
-	{ "rotatelayoutaxis",        rotatelayoutaxis },
-	{ "setlayoutaxisex",         setlayoutaxisex },
-	{ "mirrorlayout",            mirrorlayout },
-	#endif // FLEXTILE_DELUXE_LAYOUT
-	#if CFACTS_PATCH
-	{ "setcfact",                setcfact },
-	#endif // CFACTS_PATCH
-	#if MOVEPLACE_PATCH
-	{ "moveplace",               moveplace },
-	#endif // MOVEPLACE_PATCH
-	#if EXRESIZE_PATCH
-	{ "explace",                 explace },
-	{ "togglehorizontalexpand",  togglehorizontalexpand },
-	{ "toggleverticalexpand",    toggleverticalexpand },
-	{ "togglemaximize",          togglemaximize },
-	#endif // EXRESIZE_PATCH
-	#if KEYMODES_PATCH
-	{ "setkeymode",              setkeymode },
-	#endif // KEYMODES_PATCH
-	#if TRANSFER_PATCH
-	{ "transfer",                transfer },
-	#endif // TRANSFER_PATCH
-	#if TRANSFER_ALL_PATCH
-	{ "transferall",             transferall },
-	#endif // TRANSFER_ALL_PATCH
-	{ "tagmon",                  tagmon },
-	{ "zoom",                    zoom },
-	#if VANITYGAPS_PATCH
-	{ "incrgaps",                incrgaps },
-	{ "incrigaps",               incrigaps },
-	{ "incrogaps",               incrogaps },
-	{ "incrihgaps",              incrihgaps },
-	{ "incrivgaps",              incrivgaps },
-	{ "incrohgaps",              incrohgaps },
-	{ "incrovgaps",              incrovgaps },
-	{ "togglegaps",              togglegaps },
-	{ "defaultgaps",             defaultgaps },
-	{ "setgaps",                 setgapsex },
-	#endif // VANITYGAPS_PATCH
-	{ "view",                    view },
-	{ "viewall",                 viewallex },
-	{ "viewex",                  viewex },
-	{ "toggleview",              view },
-	#if SHIFTVIEW_PATCH
-	{ "shiftview",               shiftview },
-	#endif // SHIFTVIEW_PATCH
-	#if SHIFTVIEW_CLIENTS_PATCH
-	{ "shiftviewclients",        shiftviewclients },
-	#endif // SHIFTVIEW_CLIENTS_PATCH
-	#if SELFRESTART_PATCH
-	{ "self_restart",            self_restart },
-	#endif // SELFRESTART_PATCH
-	#if BAR_TAGGRID_PATCH
-	{ "switchtag",               switchtag },
-	#endif // BAR_TAGGRID_PATCH
-	#if STICKY_PATCH
-	{ "togglesticky",            togglesticky },
-	#endif // STICKY_PATCH
-	#if SETBORDERPX_PATCH
-	{ "setborderpx",             setborderpx },
-	#endif // SETBORDERPX_PATCH
-	#if CYCLELAYOUTS_PATCH
-	{ "cyclelayout",             cyclelayout },
-	#endif // CYCLELAYOUTS_PATCH
-	#if MDPCONTROL_PATCH
-	{ "mpdchange",               mpdchange },
-	{ "mpdcontrol",              mpdcontrol },
-	#endif // MDPCONTROL_PATCH
-	{ "toggleviewex",            toggleviewex },
-	{ "tag",                     tag },
-	{ "tagall",                  tagallex },
-	{ "tagex",                   tagex },
-	{ "toggletag",               tag },
-	{ "toggletagex",             toggletagex },
-	#if TAGALLMON_PATCH
-	{ "tagallmon",               tagallmon },
-	#endif // TAGALLMON_PATCH
-	#if TAGSWAPMON_PATCH
-	{ "tagswapmon",              tagswapmon},
-	#endif // TAGSWAPMON_PATCH
-	#if BAR_ALTERNATIVE_TAGS_PATCH
-	{ "togglealttag",            togglealttag },
-	#endif // BAR_ALTERNATIVE_TAGS_PATCH
-	#if TOGGLEFULLSCREEN_PATCH
-	{ "togglefullscreen",        togglefullscreen },
-	#endif // TOGGLEFULLSCREEN_PATCH
-	#if !FAKEFULLSCREEN_PATCH && FAKEFULLSCREEN_CLIENT_PATCH
-	{ "togglefakefullscreen",    togglefakefullscreen },
-	#endif // FAKEFULLSCREEN_CLIENT_PATCH
-	#if FULLSCREEN_PATCH
-	{ "fullscreen",              fullscreen },
-	#endif // FULLSCREEN_PATCH
-	#if MAXIMIZE_PATCH
-	{ "togglehorizontalmax",     togglehorizontalmax },
-	{ "toggleverticalmax",       toggleverticalmax },
-	{ "togglemax",               togglemax },
-	#endif // MAXIMIZE_PATCH
-	#if SCRATCHPADS_PATCH
-	{ "togglescratch",           togglescratch },
-	#endif // SCRATCHPADS_PATCH
-	#if UNFLOATVISIBLE_PATCH
-	{ "unfloatvisible",          unfloatvisible },
-	#endif // UNFLOATVISIBLE_PATCH
-	{ "killclient",              killclient },
-	#if WINVIEW_PATCH
-	{ "winview",                 winview },
-	#endif // WINVIEW_PATCH
-	#if XRDB_PATCH && !BAR_VTCOLORS_PATCH
-	{ "xrdb",                    xrdb },
-	#endif // XRDB_PATCH
-	#if TAGOTHERMONITOR_PATCH
-	{ "tagnextmonex",            tagnextmonex },
-	{ "tagprevmonex",            tagprevmonex },
-	#endif // TAGOTHERMONITOR_PATCH
-	{ "quit",                    quit },
-	{ "setlayout",               setlayout },
-	{ "setlayoutex",             setlayoutex },
-};
-#elif FSIGNAL_PATCH
-/* signal definitions */
-/* signum must be greater than 0 */
-/* trigger signals using `xsetroot -name "fsignal:<signum>"` */
-static Signal signals[] = {
-	/* signum       function        argument  */
-	{ 1,            setlayout,      {.v = 0} },
-};
-#endif // DWMC_PATCH
 
 /* layout(s) */
 static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
@@ -632,29 +524,31 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int nstack      = 0;    /* number of clients in primary stack area */
 #endif // FLEXTILE_DELUXE_LAYOUT
 static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
+#if DECORATION_HINTS_PATCH
+static const int decorhints  = 1;    /* 1 means respect decoration hints */
+#endif // DECORATION_HINTS_PATCH
 
 #if NROWGRID_LAYOUT
 #define FORCE_VSPLIT 1
 #endif
 
-/* Position of the monocle layout in the layouts variable, used by warp and fullscreen patches */
-#define MONOCLE_LAYOUT_POS 2
-
 #if FLEXTILE_DELUXE_LAYOUT
 static const Layout layouts[] = {
-	/* symbol     arrange function, { nmaster, nstack, layout, master axis, stack axis, secondary stack axis } */
+	/* symbol     arrange function, { nmaster, nstack, layout, master axis, stack axis, secondary stack axis, symbol func } */
 	{ "[]=",      flextile,         { -1, -1, SPLIT_VERTICAL, TOP_TO_BOTTOM, TOP_TO_BOTTOM, 0, NULL } }, // default tile layout
  	{ "><>",      NULL,             {0} },    /* no layout function means floating behavior */
-	{ "[M]",      flextile,         { -1, -1, NO_SPLIT, MONOCLE, 0, 0, NULL } }, // monocle
+	{ "[M]",      flextile,         { -1, -1, NO_SPLIT, MONOCLE, MONOCLE, 0, NULL } }, // monocle
 	{ "|||",      flextile,         { -1, -1, SPLIT_VERTICAL, LEFT_TO_RIGHT, TOP_TO_BOTTOM, 0, NULL } }, // columns (col) layout
 	{ ">M>",      flextile,         { -1, -1, FLOATING_MASTER, LEFT_TO_RIGHT, LEFT_TO_RIGHT, 0, NULL } }, // floating master
 	{ "[D]",      flextile,         { -1, -1, SPLIT_VERTICAL, TOP_TO_BOTTOM, MONOCLE, 0, NULL } }, // deck
 	{ "TTT",      flextile,         { -1, -1, SPLIT_HORIZONTAL, LEFT_TO_RIGHT, LEFT_TO_RIGHT, 0, NULL } }, // bstack
 	{ "===",      flextile,         { -1, -1, SPLIT_HORIZONTAL, LEFT_TO_RIGHT, TOP_TO_BOTTOM, 0, NULL } }, // bstackhoriz
-	{ "|M|",      flextile,         { -1, -1, SPLIT_CENTERED_VERTICAL, TOP_TO_BOTTOM, TOP_TO_BOTTOM, TOP_TO_BOTTOM, NULL } }, // centeredmaster
-	{ ":::",      flextile,         { -1, -1, NO_SPLIT, GAPPLESSGRID, 0, 0, NULL } }, // gappless grid
-	{ "[\\]",     flextile,         { -1, -1, NO_SPLIT, DWINDLE, 0, 0, NULL } }, // fibonacci dwindle
-	{ "(@)",      flextile,         { -1, -1, NO_SPLIT, SPIRAL, 0, 0, NULL } }, // fibonacci spiral
+	{ "|M|",      flextile,         { -1, -1, SPLIT_CENTERED_VERTICAL, LEFT_TO_RIGHT, TOP_TO_BOTTOM, TOP_TO_BOTTOM, NULL } }, // centeredmaster
+	{ "-M-",      flextile,         { -1, -1, SPLIT_CENTERED_HORIZONTAL, TOP_TO_BOTTOM, LEFT_TO_RIGHT, LEFT_TO_RIGHT, NULL } }, // centeredmaster horiz
+	{ ":::",      flextile,         { -1, -1, NO_SPLIT, GAPPLESSGRID, GAPPLESSGRID, 0, NULL } }, // gappless grid
+	{ "[\\]",     flextile,         { -1, -1, NO_SPLIT, DWINDLE, DWINDLE, 0, NULL } }, // fibonacci dwindle
+	{ "(@)",      flextile,         { -1, -1, NO_SPLIT, SPIRAL, SPIRAL, 0, NULL } }, // fibonacci spiral
+	{ "[T]",      flextile,         { -1, -1, SPLIT_VERTICAL, LEFT_TO_RIGHT, TATAMI, 0, NULL } }, // tatami mats
 	#if TILE_LAYOUT
 	{ "[]=",      tile,             {0} },
 	#endif
@@ -862,6 +756,14 @@ static const char *statuscmds[] = { "notify-send Mouse$BUTTON" };
 static char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
 #endif // BAR_STATUSCMD_PATCH | DWMBLOCKS_PATCH
 
+#if ON_EMPTY_KEYS_PATCH
+static const char* firefoxcmd[] = {"firefox", NULL};
+static Key on_empty_keys[] = {
+	/* modifier key            function                argument */
+	{ 0,        XK_f,          spawn,                  {.v = firefoxcmd } },
+};
+#endif // ON_EMPTY_KEYS_PATCH
+
 static Key keys[] = {
 	/* modifier                     key            function                argument */
 	#if KEYMODES_PATCH
@@ -869,7 +771,18 @@ static Key keys[] = {
 	#endif // KEYMODES_PATCH
 	{ MODKEY,                       XK_p,          spawn,                  {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return,     spawn,                  {.v = termcmd } },
+	#if RIODRAW_PATCH
+	{ MODKEY|ControlMask,           XK_p,          riospawnsync,           {.v = dmenucmd } },
+	{ MODKEY|ControlMask,           XK_Return,     riospawn,               {.v = termcmd } },
+	{ MODKEY,                       XK_s,          rioresize,              {0} },
+	#endif // RIODRAW_PATCH
 	{ MODKEY,                       XK_b,          togglebar,              {0} },
+	#if TAB_PATCH
+	{ MODKEY|ControlMask,           XK_b,          tabmode,                {-1} },
+	#endif // TAB_PATCH
+	#if FOCUSMASTER_PATCH
+	{ MODKEY|ControlMask,           XK_space,      focusmaster,            {0} },
+	#endif // FOCUSMASTER_PATCH
 	#if STACKER_PATCH
 	STACKKEYS(MODKEY,                              focus)
 	STACKKEYS(MODKEY|ShiftMask,                    push)
@@ -877,6 +790,12 @@ static Key keys[] = {
 	{ MODKEY,                       XK_j,          focusstack,             {.i = +1 } },
 	{ MODKEY,                       XK_k,          focusstack,             {.i = -1 } },
 	#endif // STACKER_PATCH
+	#if FOCUSDIR_PATCH
+	{ MODKEY,                       XK_Left,       focusdir,               {.i = 0 } }, // left
+	{ MODKEY,                       XK_Right,      focusdir,               {.i = 1 } }, // right
+	{ MODKEY,                       XK_Up,         focusdir,               {.i = 2 } }, // up
+	{ MODKEY,                       XK_Down,       focusdir,               {.i = 3 } }, // down
+	#endif // FOCUSDIR_PATCH
 	#if SWAPFOCUS_PATCH && PERTAG_PATCH
 	{ MODKEY,                       XK_s,          swapfocus,              {.i = -1 } },
 	#endif // SWAPFOCUS_PATCH
@@ -908,6 +827,10 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_l,          setcfact,               {.f = -0.25} },
 	{ MODKEY|ShiftMask,             XK_o,          setcfact,               {0} },
 	#endif // CFACTS_PATCH
+	#if ASPECTRESIZE_PATCH
+	{ MODKEY|ControlMask|ShiftMask, XK_e,          aspectresize,           {.i = +24} },
+	{ MODKEY|ControlMask|ShiftMask, XK_r,          aspectresize,           {.i = -24} },
+	#endif // ASPECTRESIZE_PATCH
 	#if MOVERESIZE_PATCH
 	{ MODKEY|Mod4Mask,              XK_Down,       moveresize,             {.v = "0x 25y 0w 0h" } },
 	{ MODKEY|Mod4Mask,              XK_Up,         moveresize,             {.v = "0x -25y 0w 0h" } },
@@ -931,6 +854,9 @@ static Key keys[] = {
 	#if REORGANIZETAGS_PATCH
 	{ MODKEY|ControlMask,           XK_r,          reorganizetags,         {0} },
 	#endif // REORGANIZETAGS_PATCH
+	#if INSETS_PATCH
+	{ MODKEY|ShiftMask|ControlMask, XK_a,          updateinset,            {.v = &default_inset } },
+	#endif // INSETS_PATCH
 	{ MODKEY,                       XK_Return,     zoom,                   {0} },
 	#if VANITYGAPS_PATCH
 	{ MODKEY|Mod4Mask,              XK_u,          incrgaps,               {.i = +1 } },
@@ -959,9 +885,9 @@ static Key keys[] = {
 	{ MODKEY|Mod4Mask,              XK_Tab,        shiftviewclients,       { .i = -1 } },
 	{ MODKEY|Mod4Mask,              XK_backslash,  shiftviewclients,       { .i = +1 } },
   	#endif // SHIFTVIEW_CLIENTS_PATCH
-	#if BAR_AWESOMEBAR_PATCH
+	#if BAR_WINTITLEACTIONS_PATCH
 	{ MODKEY|ControlMask,           XK_z,          showhideclient,         {0} },
-	#endif // BAR_AWESOMEBAR_PATCH
+	#endif // BAR_WINTITLEACTIONS_PATCH
 	{ MODKEY|ShiftMask,             XK_c,          killclient,             {0} },
 	#if KILLUNSEL_PATCH
 	{ MODKEY|ShiftMask,             XK_x,          killunsel,              {0} },
@@ -1000,7 +926,7 @@ static Key keys[] = {
 	{ MODKEY|Mod5Mask,              XK_Tab,        rotatelayoutaxis,       {.i = -2 } },   /* flextile, 2 = master axis */
 	{ MODKEY|Mod5Mask|ShiftMask,    XK_Tab,        rotatelayoutaxis,       {.i = -3 } },   /* flextile, 3 = stack axis */
 	{ MODKEY|Mod5Mask|Mod1Mask,     XK_Tab,        rotatelayoutaxis,       {.i = -4 } },   /* flextile, 4 = secondary stack axis */
-	{ MODKEY|ControlMask,           XK_Return,     mirrorlayout,           {0} },         /* flextile, flip master and stack areas */
+	{ MODKEY|ControlMask,           XK_Return,     mirrorlayout,           {0} },          /* flextile, flip master and stack areas */
 	#endif // FLEXTILE_DELUXE_LAYOUT
 	{ MODKEY,                       XK_space,      setlayout,              {0} },
 	{ MODKEY|ShiftMask,             XK_space,      togglefloating,         {0} },
@@ -1011,10 +937,13 @@ static Key keys[] = {
 	{ MODKEY|ControlMask|ShiftMask, XK_k,          toggleverticalmax,      {0} },
 	{ MODKEY|ControlMask,           XK_m,          togglemax,              {0} },
 	#endif // MAXIMIZE_PATCH
+	#if NO_MOD_BUTTONS_PATCH
+	{ MODKEY|ShiftMask,             XK_Escape,     togglenomodbuttons,     {0} },
+	#endif // NO_MOD_BUTTONS_PATCH
 	#if SCRATCHPADS_PATCH
 	{ MODKEY,                       XK_grave,      togglescratch,          {.ui = 0 } },
-	{ MODKEY|ControlMask,           XK_grave,      togglescratch,          {.ui = 1 } },
-	{ MODKEY|ShiftMask,             XK_grave,      togglescratch,          {.ui = 2 } },
+	{ MODKEY|ControlMask,           XK_grave,      setscratch,             {.ui = 0 } },
+	{ MODKEY|ShiftMask,             XK_grave,      removescratch,          {.ui = 0 } },
 	#endif // SCRATCHPADS_PATCH
 	#if UNFLOATVISIBLE_PATCH
 	{ MODKEY|Mod4Mask,              XK_space,      unfloatvisible,         {0} },
@@ -1036,6 +965,9 @@ static Key keys[] = {
 	{ MODKEY,                       XK_minus,      scratchpad_show,        {0} },
 	{ MODKEY|ShiftMask,             XK_minus,      scratchpad_hide,        {0} },
 	{ MODKEY,                       XK_equal,      scratchpad_remove,      {0} },
+	#elif SCRATCHPADS_PATCH
+	{ MODKEY,                       XK_0,          view,                   {.ui = ~SPTAGMASK } },
+	{ MODKEY|ShiftMask,             XK_0,          tag,                    {.ui = ~SPTAGMASK } },
 	#else
 	{ MODKEY,                       XK_0,          view,                   {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,          tag,                    {.ui = ~0 } },
@@ -1045,8 +977,8 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_comma,      tagmon,                 {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period,     tagmon,                 {.i = +1 } },
 	#if FOCUSADJACENTTAG_PATCH
-	{ MODKEY,                       XK_Left,       viewtoleft,             {0} },
-	{ MODKEY,                       XK_Right,      viewtoright,            {0} },
+	{ MODKEY,                       XK_Left,       viewtoleft,             {0} }, // note keybinding conflict with focusdir
+	{ MODKEY,                       XK_Right,      viewtoright,            {0} }, // note keybinding conflict with focusdir
 	{ MODKEY|ShiftMask,             XK_Left,       tagtoleft,              {0} },
 	{ MODKEY|ShiftMask,             XK_Right,      tagtoright,             {0} },
 	{ MODKEY|ControlMask,           XK_Left,       tagandviewtoleft,       {0} },
@@ -1183,11 +1115,11 @@ static Key keys[] = {
 	{ MODKEY|ControlMask,           XK_comma,      cyclelayout,            {.i = -1 } },
 	{ MODKEY|ControlMask,           XK_period,     cyclelayout,            {.i = +1 } },
 	#endif // CYCLELAYOUTS_PATCH
-	#if MDPCONTROL_PATCH
+	#if MPDCONTROL_PATCH
 	{ MODKEY,                       XK_F1,         mpdchange,              {.i = -1} },
 	{ MODKEY,                       XK_F2,         mpdchange,              {.i = +1} },
 	{ MODKEY,                       XK_Escape,     mpdcontrol,             {0} },
-	#endif // MDPCONTROL_PATCH
+	#endif // MPDCONTROL_PATCH
 	TAGKEYS(                        XK_1,                                  0)
 	TAGKEYS(                        XK_2,                                  1)
 	TAGKEYS(                        XK_3,                                  2)
@@ -1237,11 +1169,15 @@ static Button buttons[] = {
 	{ ClkButton,            0,                   Button1,        spawn,          {.v = dmenucmd } },
 	#endif // BAR_STATUSBUTTON_PATCH
 	{ ClkLtSymbol,          0,                   Button1,        setlayout,      {0} },
+	#if BAR_LAYOUTMENU_PATCH
+	{ ClkLtSymbol,          0,                   Button3,        layoutmenu,     {0} },
+	#else
 	{ ClkLtSymbol,          0,                   Button3,        setlayout,      {.v = &layouts[2]} },
-	#if BAR_AWESOMEBAR_PATCH
+	#endif // BAR_LAYOUTMENU_PATCH
+	#if BAR_WINTITLEACTIONS_PATCH
 	{ ClkWinTitle,          0,                   Button1,        togglewin,      {0} },
 	{ ClkWinTitle,          0,                   Button3,        showhideclient, {0} },
-	#endif // BAR_AWESOMEBAR_PATCH
+	#endif // BAR_WINTITLEACTIONS_PATCH
 	{ ClkWinTitle,          0,                   Button2,        zoom,           {0} },
 	#if BAR_STATUSCMD_PATCH && BAR_DWMBLOCKS_PATCH
 	{ ClkStatusText,        0,                   Button1,        sigdwmblocks,   {.i = 1 } },
@@ -1254,7 +1190,21 @@ static Button buttons[] = {
 	#else
 	{ ClkStatusText,        0,                   Button2,        spawn,          {.v = termcmd } },
 	#endif // BAR_STATUSCMD_PATCH
+	#if PLACEMOUSE_PATCH
+	/* placemouse options, choose which feels more natural:
+	 *    0 - tiled position is relative to mouse cursor
+	 *    1 - tiled postiion is relative to window center
+	 *    2 - mouse pointer warps to window center
+	 *
+	 * The moveorplace uses movemouse or placemouse depending on the floating state
+	 * of the selected client. Set up individual keybindings for the two if you want
+	 * to control these separately (i.e. to retain the feature to move a tiled window
+	 * into a floating position).
+	 */
+	{ ClkClientWin,         MODKEY,              Button1,        moveorplace,    {.i = 1} },
+	#else
 	{ ClkClientWin,         MODKEY,              Button1,        movemouse,      {0} },
+	#endif // PLACEMOUSE_PATCH
 	{ ClkClientWin,         MODKEY,              Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,              Button3,        resizemouse,    {0} },
 	#if DRAGCFACT_PATCH && CFACTS_PATCH
@@ -1267,4 +1217,343 @@ static Button buttons[] = {
 	{ ClkTagBar,            0,                   Button3,        toggleview,     {0} },
 	{ ClkTagBar,            MODKEY,              Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,              Button3,        toggletag,      {0} },
+	#if TAB_PATCH
+	{ ClkTabBar,            0,                   Button1,        focuswin,       {0} },
+	#endif // TAB_PATCH
 };
+
+#if DWMC_PATCH
+/* signal definitions */
+/* signum must be greater than 0 */
+/* trigger signals using `xsetroot -name "fsignal:<signame> [<type> <value>]"` */
+static Signal signals[] = {
+	/* signum                    function */
+	{ "focusstack",              focusstack },
+	{ "setmfact",                setmfact },
+	{ "togglebar",               togglebar },
+	{ "incnmaster",              incnmaster },
+	{ "togglefloating",          togglefloating },
+	{ "focusmon",                focusmon },
+	#if STACKER_PATCH
+	{ "pushstack",               pushstack },
+	#endif // STACKER_PATCH
+	#if FOCUSURGENT_PATCH
+	{ "focusurgent",             focusurgent },
+	#endif // FOCUSURGENT_PATCH
+	#if FOCUSADJACENTTAG_PATCH
+	{ "viewtoleft",              viewtoleft },
+	{ "viewtoright",             viewtoright },
+	{ "tagtoleft",               tagtoleft },
+	{ "tagtoright",              tagtoright},
+	{ "tagandviewtoleft",        tagandviewtoleft },
+	{ "tagandviewtoright",       tagandviewtoright },
+	#endif // FOCUSADJACENTTAG_PATCH
+	#if SWAPFOCUS_PATCH && PERTAG_PATCH
+	{ "swapfocus",               swapfocus },
+	#endif // SWAPFOCUS_PATCH
+	#if SWITCHCOL_PATCH
+	{ "switchcol",               switchcol },
+	#endif // SWITCHCOL_PATCH
+	#if ROTATESTACK_PATCH
+	{ "rotatestack",             rotatestack },
+	#endif // ROTATESTACK_PATCH
+	#if INPLACEROTATE_PATCH
+	{ "inplacerotate",           inplacerotate },
+	#endif // INPLACEROTATE_PATCH
+	#if PUSH_PATCH || PUSH_NO_MASTER_PATCH
+	{ "pushdown",                pushdown },
+	{ "pushup",                  pushup },
+	#endif // PUSH_PATCH / PUSH_NO_MASTER_PATCH
+	#if FLEXTILE_DELUXE_LAYOUT
+	{ "incnstack",               incnstack },
+	{ "rotatelayoutaxis",        rotatelayoutaxis },
+	{ "setlayoutaxisex",         setlayoutaxisex },
+	{ "mirrorlayout",            mirrorlayout },
+	#endif // FLEXTILE_DELUXE_LAYOUT
+	#if CFACTS_PATCH
+	{ "setcfact",                setcfact },
+	#endif // CFACTS_PATCH
+	#if MOVEPLACE_PATCH
+	{ "moveplace",               moveplace },
+	#endif // MOVEPLACE_PATCH
+	#if EXRESIZE_PATCH
+	{ "explace",                 explace },
+	{ "togglehorizontalexpand",  togglehorizontalexpand },
+	{ "toggleverticalexpand",    toggleverticalexpand },
+	{ "togglemaximize",          togglemaximize },
+	#endif // EXRESIZE_PATCH
+	#if KEYMODES_PATCH
+	{ "setkeymode",              setkeymode },
+	#endif // KEYMODES_PATCH
+	#if TRANSFER_PATCH
+	{ "transfer",                transfer },
+	#endif // TRANSFER_PATCH
+	#if TRANSFER_ALL_PATCH
+	{ "transferall",             transferall },
+	#endif // TRANSFER_ALL_PATCH
+	{ "tagmon",                  tagmon },
+	{ "zoom",                    zoom },
+	#if VANITYGAPS_PATCH
+	{ "incrgaps",                incrgaps },
+	{ "incrigaps",               incrigaps },
+	{ "incrogaps",               incrogaps },
+	{ "incrihgaps",              incrihgaps },
+	{ "incrivgaps",              incrivgaps },
+	{ "incrohgaps",              incrohgaps },
+	{ "incrovgaps",              incrovgaps },
+	{ "togglegaps",              togglegaps },
+	{ "defaultgaps",             defaultgaps },
+	{ "setgaps",                 setgapsex },
+	#endif // VANITYGAPS_PATCH
+	{ "view",                    view },
+	{ "viewall",                 viewallex },
+	{ "viewex",                  viewex },
+	{ "toggleview",              toggleview },
+	#if SHIFTVIEW_PATCH
+	{ "shiftview",               shiftview },
+	#endif // SHIFTVIEW_PATCH
+	#if SHIFTVIEW_CLIENTS_PATCH
+	{ "shiftviewclients",        shiftviewclients },
+	#endif // SHIFTVIEW_CLIENTS_PATCH
+	#if SELFRESTART_PATCH
+	{ "self_restart",            self_restart },
+	#endif // SELFRESTART_PATCH
+	#if BAR_TAGGRID_PATCH
+	{ "switchtag",               switchtag },
+	#endif // BAR_TAGGRID_PATCH
+	#if STICKY_PATCH
+	{ "togglesticky",            togglesticky },
+	#endif // STICKY_PATCH
+	#if SETBORDERPX_PATCH
+	{ "setborderpx",             setborderpx },
+	#endif // SETBORDERPX_PATCH
+	#if CYCLELAYOUTS_PATCH
+	{ "cyclelayout",             cyclelayout },
+	#endif // CYCLELAYOUTS_PATCH
+	#if MPDCONTROL_PATCH
+	{ "mpdchange",               mpdchange },
+	{ "mpdcontrol",              mpdcontrol },
+	#endif // MPDCONTROL_PATCH
+	{ "toggleviewex",            toggleviewex },
+	{ "tag",                     tag },
+	{ "tagall",                  tagallex },
+	{ "tagex",                   tagex },
+	{ "toggletag",               toggletag },
+	{ "toggletagex",             toggletagex },
+	#if TAGALLMON_PATCH
+	{ "tagallmon",               tagallmon },
+	#endif // TAGALLMON_PATCH
+	#if TAGSWAPMON_PATCH
+	{ "tagswapmon",              tagswapmon},
+	#endif // TAGSWAPMON_PATCH
+	#if BAR_ALTERNATIVE_TAGS_PATCH
+	{ "togglealttag",            togglealttag },
+	#endif // BAR_ALTERNATIVE_TAGS_PATCH
+	#if TOGGLEFULLSCREEN_PATCH
+	{ "togglefullscreen",        togglefullscreen },
+	#endif // TOGGLEFULLSCREEN_PATCH
+	#if !FAKEFULLSCREEN_PATCH && FAKEFULLSCREEN_CLIENT_PATCH
+	{ "togglefakefullscreen",    togglefakefullscreen },
+	#endif // FAKEFULLSCREEN_CLIENT_PATCH
+	#if FULLSCREEN_PATCH
+	{ "fullscreen",              fullscreen },
+	#endif // FULLSCREEN_PATCH
+	#if MAXIMIZE_PATCH
+	{ "togglehorizontalmax",     togglehorizontalmax },
+	{ "toggleverticalmax",       toggleverticalmax },
+	{ "togglemax",               togglemax },
+	#endif // MAXIMIZE_PATCH
+	#if SCRATCHPADS_PATCH
+	{ "togglescratch",           togglescratch },
+	#endif // SCRATCHPADS_PATCH
+	#if UNFLOATVISIBLE_PATCH
+	{ "unfloatvisible",          unfloatvisible },
+	#endif // UNFLOATVISIBLE_PATCH
+	{ "killclient",              killclient },
+	#if WINVIEW_PATCH
+	{ "winview",                 winview },
+	#endif // WINVIEW_PATCH
+	#if XRDB_PATCH && !BAR_VTCOLORS_PATCH
+	{ "xrdb",                    xrdb },
+	#endif // XRDB_PATCH
+	#if TAGOTHERMONITOR_PATCH
+	{ "tagnextmonex",            tagnextmonex },
+	{ "tagprevmonex",            tagprevmonex },
+	#endif // TAGOTHERMONITOR_PATCH
+	{ "quit",                    quit },
+	{ "setlayout",               setlayout },
+	{ "setlayoutex",             setlayoutex },
+};
+#elif FSIGNAL_PATCH
+/* signal definitions */
+/* signum must be greater than 0 */
+/* trigger signals using `xsetroot -name "fsignal:<signum>"` */
+static Signal signals[] = {
+	/* signum       function        argument  */
+	{ 1,            setlayout,      {.v = 0} },
+};
+#endif // DWMC_PATCH
+
+#if IPC_PATCH
+static const char *ipcsockpath = "/tmp/dwm.sock";
+static IPCCommand ipccommands[] = {
+	IPCCOMMAND( focusmon, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( focusstack, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( incnmaster, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( killclient, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( quit, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( setlayoutsafe, 1, {ARG_TYPE_PTR} ),
+	IPCCOMMAND( setmfact, 1, {ARG_TYPE_FLOAT} ),
+	IPCCOMMAND( setstatus, 1, {ARG_TYPE_STR} ),
+	IPCCOMMAND( tag, 1, {ARG_TYPE_UINT} ),
+	IPCCOMMAND( tagmon, 1, {ARG_TYPE_UINT} ),
+	IPCCOMMAND( togglebar, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( togglefloating, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( toggletag, 1, {ARG_TYPE_UINT} ),
+	IPCCOMMAND( toggleview, 1, {ARG_TYPE_UINT} ),
+	IPCCOMMAND( view, 1, {ARG_TYPE_UINT} ),
+	IPCCOMMAND( zoom, 1, {ARG_TYPE_NONE} ),
+	#if BAR_ALTERNATIVE_TAGS_PATCH
+	IPCCOMMAND( togglealttag, 1, {ARG_TYPE_NONE} ),
+	#endif // BAR_ALTERNATIVE_TAGS_PATCH
+	#if BAR_TAGGRID_PATCH
+	IPCCOMMAND( switchtag, 1, {ARG_TYPE_UINT} ),
+	#endif // BAR_TAGGRID_PATCH
+	#if CFACTS_PATCH
+	IPCCOMMAND( setcfact, 1, {ARG_TYPE_FLOAT} ),
+	#endif // CFACTS_PATCH
+	#if CYCLELAYOUTS_PATCH
+	IPCCOMMAND( cyclelayout, 1, {ARG_TYPE_SINT} ),
+	#endif // CYCLELAYOUTS_PATCH
+	#if EXRESIZE_PATCH
+	IPCCOMMAND( explace, 1, {ARG_TYPE_UINT} ),
+	IPCCOMMAND( togglehorizontalexpand, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( toggleverticalexpand, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( togglemaximize, 1, {ARG_TYPE_SINT} ),
+	#endif // EXRESIZE_PATCH
+	#if !FAKEFULLSCREEN_PATCH && FAKEFULLSCREEN_CLIENT_PATCH
+	IPCCOMMAND( togglefakefullscreen, 1, {ARG_TYPE_NONE} ),
+	#endif // FAKEFULLSCREEN_CLIENT_PATCH
+	#if FLOATPOS_PATCH
+	IPCCOMMAND( floatpos, 1, {ARG_TYPE_STR} ),
+	#endif // FLOATPOS_PATCH
+	#if FULLSCREEN_PATCH
+	IPCCOMMAND( fullscreen, 1, {ARG_TYPE_NONE} ),
+	#endif // FULLSCREEN_PATCH
+	#if FLEXTILE_DELUXE_LAYOUT
+	IPCCOMMAND( incnstack, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( rotatelayoutaxis, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( setlayoutaxisex, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( mirrorlayout, 1, {ARG_TYPE_NONE} ),
+	#endif // FLEXTILE_DELUXE_LAYOUT
+	#if FOCUSURGENT_PATCH
+	IPCCOMMAND( focusurgent, 1, {ARG_TYPE_NONE} ),
+	#endif // FOCUSURGENT_PATCH
+	#if FOCUSADJACENTTAG_PATCH
+	IPCCOMMAND( viewtoleft, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( viewtoright, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( tagtoleft, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( tagtoright, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( tagandviewtoleft, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( tagandviewtoright, 1, {ARG_TYPE_NONE} ),
+	#endif // FOCUSADJACENTTAG_PATCH
+	#if INPLACEROTATE_PATCH
+	IPCCOMMAND( inplacerotate, 1, {ARG_TYPE_SINT} ),
+	#endif // INPLACEROTATE_PATCH
+	#if KEYMODES_PATCH
+	IPCCOMMAND( setkeymode, 1, {ARG_TYPE_UINT} ),
+	#endif // KEYMODES_PATCH
+	#if MAXIMIZE_PATCH
+	IPCCOMMAND( togglehorizontalmax, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( toggleverticalmax, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( togglemax, 1, {ARG_TYPE_NONE} ),
+	#endif // MAXIMIZE_PATCH
+	#if MPDCONTROL_PATCH
+	IPCCOMMAND( mpdchange, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( mpdcontrol, 1, {ARG_TYPE_NONE} ),
+	#endif // MPDCONTROL_PATCH
+	#if MOVEPLACE_PATCH
+	IPCCOMMAND( moveplace, 1, {ARG_TYPE_UINT} ),
+	#endif // MOVEPLACE_PATCH
+	#if MOVERESIZE_PATCH
+	IPCCOMMAND( moveresize, 1, {ARG_TYPE_STR} ),
+	#endif // MOVERESIZE_PATCH
+	#if RIODRAW_PATCH
+	IPCCOMMAND( rioresize, 1, {ARG_TYPE_NONE} ),
+	#endif // RIODRAW_PATCH
+	#if PUSH_PATCH || PUSH_NO_MASTER_PATCH
+	IPCCOMMAND( pushdown, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( pushup, 1, {ARG_TYPE_NONE} ),
+	#endif // PUSH_PATCH / PUSH_NO_MASTER_PATCH
+	#if ROTATESTACK_PATCH
+	IPCCOMMAND( rotatestack, 1, {ARG_TYPE_SINT} ),
+	#endif // ROTATESTACK_PATCH
+	#if SCRATCHPADS_PATCH
+	IPCCOMMAND( togglescratch, 1, {ARG_TYPE_UINT} ),
+	#endif // SCRATCHPADS_PATCH
+	#if SELFRESTART_PATCH
+	IPCCOMMAND( self_restart, 1, {ARG_TYPE_NONE} ),
+	#endif // SELFRESTART_PATCH
+	#if SETBORDERPX_PATCH
+	IPCCOMMAND( setborderpx, 1, {ARG_TYPE_SINT} ),
+	#endif // SETBORDERPX_PATCH
+	#if SHIFTVIEW_PATCH
+	IPCCOMMAND( shiftview, 1, {ARG_TYPE_SINT} ),
+	#endif // SHIFTVIEW_PATCH
+	#if SHIFTVIEW_CLIENTS_PATCH
+	IPCCOMMAND( shiftviewclients, 1, {ARG_TYPE_SINT} ),
+	#endif // SHIFTVIEW_CLIENTS_PATCH
+	#if STACKER_PATCH
+	IPCCOMMAND( pushstack, 1, {ARG_TYPE_SINT} ),
+	#endif // STACKER_PATCH
+	#if STICKY_PATCH
+	IPCCOMMAND( togglesticky, 1, {ARG_TYPE_NONE} ),
+	#endif // STICKY_PATCH
+	#if SWAPFOCUS_PATCH && PERTAG_PATCH
+	IPCCOMMAND( swapfocus, 1, {ARG_TYPE_SINT} ),
+	#endif // SWAPFOCUS_PATCH
+	#if SWITCHCOL_PATCH
+	IPCCOMMAND( switchcol, 1, {ARG_TYPE_NONE} ),
+	#endif // SWITCHCOL_PATCH
+	#if TAGALLMON_PATCH
+	IPCCOMMAND( tagallmon, 1, {ARG_TYPE_SINT} ),
+	#endif // TAGALLMON_PATCH
+	#if TAGOTHERMONITOR_PATCH
+	IPCCOMMAND( tagnextmonex, 1, {ARG_TYPE_UINT} ),
+	IPCCOMMAND( tagprevmonex, 1, {ARG_TYPE_UINT} ),
+	#endif // TAGOTHERMONITOR_PATCH
+	#if TAGSWAPMON_PATCH
+	IPCCOMMAND( tagswapmon, 1, {ARG_TYPE_SINT} ),
+	#endif // TAGSWAPMON_PATCH
+	#if TOGGLEFULLSCREEN_PATCH
+	IPCCOMMAND( togglefullscreen, 1, {ARG_TYPE_NONE} ),
+	#endif // TOGGLEFULLSCREEN_PATCH
+	#if TRANSFER_PATCH
+	IPCCOMMAND( transfer, 1, {ARG_TYPE_NONE} ),
+	#endif // TRANSFER_PATCH
+	#if TRANSFER_ALL_PATCH
+	IPCCOMMAND( transferall, 1, {ARG_TYPE_NONE} ),
+	#endif // TRANSFER_ALL_PATCH
+	#if UNFLOATVISIBLE_PATCH
+	IPCCOMMAND( unfloatvisible, 1, {ARG_TYPE_NONE} ),
+	#endif // UNFLOATVISIBLE_PATCH
+	#if VANITYGAPS_PATCH
+	IPCCOMMAND( incrgaps, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( incrigaps, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( incrogaps, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( incrihgaps, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( incrivgaps, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( incrohgaps, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( incrovgaps, 1, {ARG_TYPE_SINT} ),
+	IPCCOMMAND( togglegaps, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( defaultgaps, 1, {ARG_TYPE_NONE} ),
+	IPCCOMMAND( setgapsex, 1, {ARG_TYPE_SINT} ),
+	#endif // VANITYGAPS_PATCH
+	#if WINVIEW_PATCH
+	IPCCOMMAND( winview, 1, {ARG_TYPE_NONE} ),
+	#endif // WINVIEW_PATCH
+	#if XRDB_PATCH && !BAR_VTCOLORS_PATCH
+	IPCCOMMAND( xrdb, 1, {ARG_TYPE_NONE} ),
+	#endif // XRDB_PATCH
+};
+#endif // IPC_PATCH

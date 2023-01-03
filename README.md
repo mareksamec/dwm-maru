@@ -37,16 +37,32 @@ Enable patches in flexipatch by modifying 0 to 1 in patches.h file
 
 Other added custom settings
 ---------------------------
-Added support for laptop HW buttons (see the top of the config.h file). I have the MODKEY mapped to Super (Win key).
+- Added support for laptop HW buttons (see the top of the config.h file). I have the MODKEY mapped to Super (Win key).
+- DWM is configured to run st(simple terminal) as main terminal with MOKDEY + Enter with zshell. To change, change the **termcmd** variable in `config.h`
 
 ## Custom keyboard shortcuts
-|     Shortcuts     |                                       Command/app                                       |
-|:-----------------:|:---------------------------------------------------------------------------------------:|
-| MODKEY + Ctrl + l |                run [xsercurelock](https://github.com/google/xsecurelock)                |
-|    MODKEY + x     | [Flameshot](https://flameshot.org/docs/installation/installation-linux/) screenshot app |
-|    MODKEY + a     |                     [ranger](https://ranger.github.io) file manager                     |
-|    MODKEY + w     |                 Run default browser defined in $BROWSER system variable                 |
+|                                       Command/app                                       |     Shortcuts     |
+|:---------------------------------------------------------------------------------------:|:-----------------:|
+|                run [xsercurelock](https://github.com/google/xsecurelock)                | MODKEY + Ctrl + l |
+| [Flameshot](https://flameshot.org/docs/installation/installation-linux/) screenshot app |    MODKEY + x     |
+|                     [ranger](https://ranger.github.io) file manager                     |    MODKEY + a     |
+|                 Run default browser defined in $BROWSER system variable                 |    MODKEY + w     |
 
+
+## Basic operations (some defaults might have been changed)
+|                    Action                    |      Command       |
+|:--------------------------------------------:|:------------------:|
+|               Run st terminal                |   MODKEY + Enter   |
+|                  Run dmenu                   |     MODKEY + r     |
+|                Cycle layouts                 |   MODKEY + Space   |
+|         Set window to floating mode          |     MODKEY + f     |
+|          Set to tiling monocle mode          |     MOKDEY + m     |
+|           Set to basic tiled mode            |     MOKDEY + t     |
+| Focus on next/previous window in current tag |   MODKEY + j / k   |
+|      Increases / decreases master size       |   MODKEY + h / l   |
+|          Move window to prev screen          | MODKEY + Shift + , |
+|          Move window to next screen          | MODKEY + Shift + . |
+|             Restart DWM in place             | MODKEY + Shift + q |
 
 TODO:
 -----
